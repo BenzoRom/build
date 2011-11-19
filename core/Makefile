@@ -5363,8 +5363,13 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) $(OTA_FROM_TARGET_
 	@echo "Package OTA: $@"
 	$(call build-ota-package-target,$@,-k $(KEY_CERT_PAIR) --output_metadata_path $(INTERNAL_OTA_METADATA))
 
-.PHONY: otapackage
+BENZO_TARGET_PACKAGE := $(PRODUCT_OUT)/benzorom-$(ANDROID_NAME)-$(ROM_VERSION).zip
+
+.PHONY: otapackage benzo
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
+benzo: otapackage
+	$(hide) ln -f $(INTERNAL_OTA_PACKAGE_TARGET) $(BENZO_TARGET_PACKAGE)
+	@echo "Package Complete: $(BENZO_TARGET_PACKAGE)"
 
 ifeq ($(BOARD_BUILD_RETROFIT_DYNAMIC_PARTITIONS_OTA_PACKAGE),true)
 name := $(product_name)-ota-retrofit-$(FILE_NAME_TAG)
