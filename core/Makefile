@@ -4243,8 +4243,14 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) \
 	@echo "Package OTA: $@"
 	$(call build-ota-package-target,$@,-k $(KEY_CERT_PAIR) --output_metadata_path $(INTERNAL_OTA_METADATA))
 
-.PHONY: otapackage
+CUSTOM_TARGET_PACKAGE := $(PRODUCT_OUT)/benzorom-$(PLATFORM_VERSION)-$(ROM_VERSION).zip
+
+.PHONY: otapackage benzo
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
+benzo: otapackage
+	$(hide) ln -f $(INTERNAL_OTA_PACKAGE_TARGET) $(CUSTOM_TARGET_PACKAGE)
+	$(hide) $(MD5SUM) $(CUSTOM_TARGET_PACKAGE) > $(CUSTOM_TARGET_PACKAGE).md5sum
+	@echo "Package Complete: $(CUSTOM_TARGET_PACKAGE)"
 
 ifeq ($(BOARD_BUILD_RETROFIT_DYNAMIC_PARTITIONS_OTA_PACKAGE),true)
 name := $(TARGET_PRODUCT)
