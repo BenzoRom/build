@@ -356,6 +356,11 @@ include $(BUILD_SYSTEM)/envsetup.mk
 # See envsetup.mk for a description of SCAN_EXCLUDE_DIRS
 FIND_LEAVES_EXCLUDES := $(addprefix --prune=, $(SCAN_EXCLUDE_DIRS) .repo .git)
 
+ifneq ($(BENZO_BUILD),)
+# Include vendor BoardConfig
+include vendor/benzo/config/BoardConfigVendor.mk
+endif
+
 # The build system exposes several variables for where to find the kernel
 # headers:
 #   TARGET_DEVICE_KERNEL_HEADERS is automatically created for the current
@@ -1254,6 +1259,12 @@ endif
 # These goals don't need to collect and include Android.mks/CleanSpec.mks
 # in the source tree.
 dont_bother_goals := out product-graph
+
+ifneq ($(BENZO_BUILD),)
+  ifneq ($(wildcard vendor/benzo/sepolicy/sepolicy.mk),)
+    include vendor/benzo/sepolicy/sepolicy.mk)
+  endif
+endif
 
 # Make ANDROID Soong config variables visible to Android.mk files, for
 # consistency with those defined in BoardConfig.mk files.
