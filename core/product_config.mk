@@ -112,7 +112,6 @@ include $(BUILD_SYSTEM)/device.mk
 all_product_configs := $(get-all-product-makefiles)
 
 all_named_products :=
-
 # Find the product config makefile for the current product.
 # all_product_configs consists items like:
 # <product_name>:<path_to_the_product_makefile>

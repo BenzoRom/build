@@ -1154,6 +1154,12 @@ endif
 dont_bother_goals := out \
     product-graph dump-products
 
+ifneq ($(BENZO_BUILD),)
+ifneq ($(wildcard vendor/benzo/sepolicy/sepolicy.mk),)
+$(eval include vendor/benzo/sepolicy/sepolicy.mk)
+endif
+endif
+
 # Make ANDROID Soong config variables visible to Android.mk files, for
 # consistency with those defined in BoardConfig.mk files.
 include $(BUILD_SYSTEM)/android_soong_config_vars.mk
