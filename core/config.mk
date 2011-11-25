@@ -1239,4 +1239,10 @@ endif
 DEFAULT_DATA_OUT_MODULES := ltp $(ltp_packages) $(kselftest_modules)
 .KATI_READONLY := DEFAULT_DATA_OUT_MODULES
 
+ifneq ($(BENZO_BUILD),)
+ifneq ($(wildcard vendor/benzo/sepolicy/sepolicy.mk),)
+$(eval include vendor/benzo/sepolicy/sepolicy.mk)
+endif
+endif
+
 include $(BUILD_SYSTEM)/dumpvar.mk
