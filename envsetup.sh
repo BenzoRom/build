@@ -131,6 +131,15 @@ function check_product()
         echo "Couldn't locate the top of the tree.  Try setting TOP." >&2
         return
     fi
+
+    # Setup custom builds
+    if (echo -n $1 | grep -q -e "^aosp_") ; then
+       CUSTOM_BUILD=
+    else
+       CUSTOM_BUILD=$1
+    fi
+    export CUSTOM_BUILD
+
         TARGET_PRODUCT=$1 \
         TARGET_BUILD_VARIANT= \
         TARGET_BUILD_TYPE= \
@@ -618,6 +627,7 @@ function lunch()
         return 1
     fi
 
+    check_product $product
     TARGET_PRODUCT=$product \
     TARGET_BUILD_VARIANT=$variant \
     TARGET_PLATFORM_VERSION=$version \
