@@ -1521,15 +1521,15 @@ endef
 # $(4): staging dir
 # Depmod requires a well-formed kernel version so 0.0 is used as a placeholder.
 define build-image-kernel-modules
-    $(hide) rm -rf $(2)/lib/modules
-    $(hide) mkdir -p $(2)/lib/modules
-    $(hide) cp $(1) $(2)/lib/modules/
-    $(hide) rm -rf $(4)
-    $(hide) mkdir -p $(4)/lib/modules/0.0/$(3)lib/modules
-    $(hide) cp $(1) $(4)/lib/modules/0.0/$(3)lib/modules
-    $(hide) $(DEPMOD) -b $(4) 0.0
-    $(hide) sed -e 's/\(.*modules.*\):/\/\1:/g' -e 's/ \([^ ]*modules[^ ]*\)/ \/\1/g' $(4)/lib/modules/0.0/modules.dep > $(2)/lib/modules/modules.dep
-    $(hide) cp $(4)/lib/modules/0.0/modules.alias $(2)/lib/modules
+    rm -rf $(2)/lib/modules
+    mkdir -p $(2)/lib/modules
+    cp $(1) $(2)/lib/modules/
+    rm -rf $(4)
+    mkdir -p $(4)/lib/modules/0.0/$(3)lib/modules
+    cp $(1) $(4)/lib/modules/0.0/$(3)lib/modules
+    $(DEPMOD) -b $(4) 0.0
+    sed -e 's/\(.*modules.*\):/\/\1:/g' -e 's/ \([^ ]*modules[^ ]*\)/ \/\1/g' $(4)/lib/modules/0.0/modules.dep > $(2)/lib/modules/modules.dep
+    cp $(4)/lib/modules/0.0/modules.alias $(2)/lib/modules
 endef
 
 # -----------------------------------------------------------------
@@ -3051,6 +3051,12 @@ define images-for-partitions
 $(strip $(foreach item,$(1),$(INSTALLED_$(call to-upper,$(item))IMAGE_TARGET)))
 endef
 
+ifdef TARGET_NEEDS_DTBOIMAGE
+INSTALLED_DTBOIMAGE_TARGET := $(PRODUCT_OUT)/dtbo.img
+else ifdef BOARD_KERNEL_SEPARATED_DTBO
+INSTALLED_DTBOIMAGE_TARGET := $(PRODUCT_OUT)/dtbo.img
+endif
+
 # -----------------------------------------------------------------
 # vbmeta image
 ifeq ($(BOARD_AVB_ENABLE),true)
@@ -4103,7 +4109,7 @@ ifdef BOARD_PREBUILT_ODMIMAGE
 	$(hide) mkdir -p $(zip_root)/IMAGES
 	$(hide) cp $(INSTALLED_ODMIMAGE_TARGET) $(zip_root)/IMAGES/
 endif
-ifdef BOARD_PREBUILT_DTBOIMAGE
+ifdef INSTALLED_DTBOIMAGE_TARGET
 	$(hide) mkdir -p $(zip_root)/PREBUILT_IMAGES
 	$(hide) cp $(INSTALLED_DTBOIMAGE_TARGET) $(zip_root)/PREBUILT_IMAGES/
 	$(hide) echo "has_dtbo=true" >> $(zip_root)/META/misc_info.txt
@@ -4117,7 +4123,7 @@ ifdef BOARD_AVB_DTBO_KEY_PATH
 	    >> $(zip_root)/META/misc_info.txt
 endif # BOARD_AVB_DTBO_KEY_PATH
 endif # BOARD_AVB_ENABLE
-endif # BOARD_PREBUILT_DTBOIMAGE
+endif # INSTALLED_DTBOIMAGE_TARGET
 	$(call dump-dynamic-partitions-info,$(zip_root)/META/misc_info.txt)
 	@# The radio images in BOARD_PACK_RADIOIMAGES will be additionally copied from RADIO/ into
 	@# IMAGES/, which then will be added into <product>-img.zip. Such images must be listed in
