@@ -108,6 +108,10 @@ Usage:  ota_from_target_files [flags] input_target_files output_ota_package
       Specifies the number of worker-threads that will be used when
       generating patches for incremental updates (defaults to 3).
 
+  --backup <boolean>
+      Enable or disable the execution of backuptool.sh.
+      Disabled by default.
+
   --stash_threshold <float>
       Specifies the threshold that will be used to compute the maximum
       allowed stash size (defaults to 0.8).
@@ -178,6 +182,7 @@ OPTIONS.full_radio = False
 OPTIONS.full_bootloader = False
 # Stash size cannot exceed cache_size * threshold.
 OPTIONS.cache_size = None
+OPTIONS.backuptool = True
 OPTIONS.stash_threshold = 0.8
 OPTIONS.gen_verify = False
 OPTIONS.log_diff = None
@@ -322,6 +327,14 @@ def GetImage(which, tmpdir):
 
   return sparse_img.SparseImage(path, mappath, clobbered_blocks)
 
+def CopyInstallTools(output_zip):
+  oldcwd = os.getcwd()
+  os.chdir(os.getenv('OUT'))
+  for root, subdirs, files in os.walk("install"):
+    for f in files:
+      p = os.path.join(root, f)
+      output_zip.write(p, p)
+  os.chdir(oldcwd)
 
 def AddCompatibilityArchive(target_zip, output_zip, system_included=True,
                             vendor_included=True):
@@ -468,6 +481,16 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.AppendExtra("ifelse(is_mounted(\"/system\"), unmount(\"/system\"));")
   device_specific.FullOTA_InstallBegin()
 
+  CopyInstallTools(output_zip)
+  script.UnpackPackageDir("install", "/tmp/install")
+  script.SetPermissionsRecursive("/tmp/install", 0, 0, 0755, 0644, None, None)
+  script.SetPermissionsRecursive("/tmp/install/bin", 0, 0, 0755, 0755, None, None)
+
+  if OPTIONS.backuptool:
+    script.Mount("/system")
+    script.RunBackup("backup")
+    script.Unmount("/system")
+
   script.Print("._______ ._______.______  .______ ._______  ")
   script.Print(": __   / : .____/:      \ \____  |: .___  \ ")
   script.Print("|  |>  \ | : _/\ |       |/  ____|| :   |  |")
@@ -522,6 +545,14 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
 
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
+
+  if OPTIONS.backuptool:
+    script.ShowProgress(0.02, 10)
+    if block_based:
+      script.Mount("/system")
+    script.RunBackup("restore")
+    if block_based:
+      script.Unmount("/system")
 
   script.Print(" ")
   script.Print("Flashing benzoCore..")
@@ -1328,6 +1359,8 @@ def main(argv):
       OPTIONS.updater_binary = a
     elif o in ("--no_fallback_to_full",):
       OPTIONS.fallback_to_full = False
+    elif o in ("--backup"):
+      OPTIONS.backuptool = bool(a.lower() == 'true')
     elif o == "--stash_threshold":
       try:
         OPTIONS.stash_threshold = float(a)
@@ -1371,6 +1404,7 @@ def main(argv):
                                  "oem_no_mount",
                                  "verify",
                                  "no_fallback_to_full",
+                                 "backup=",
                                  "stash_threshold=",
                                  "gen_verify",
                                  "log_diff=",
