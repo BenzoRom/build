@@ -44,6 +44,8 @@ Invoke ". build/envsetup.sh" from your shell to add the following functions to y
 - refreshmod: Refresh list of modules for allmod/gomod/pathmod/outmod/installmod.
 - syswrite:   Remount partitions (e.g. system.img) as writable, rebooting if necessary.
 - aospremote: Add git remote for matching AOSP repository.
+- mka:        Builds using all the processors allowed.
+- reposync:   Parallel repo sync.
 
 Environment options:
 - SANITIZE_HOST: Set to 'address' to use ASAN for all host modules.
@@ -1874,6 +1876,16 @@ function aospremote()
     fi
     git remote add aosp https://android.googlesource.com/$PFX$PROJECT
     echo "Remote 'aosp' created"
+}
+
+function mka() {
+    local Jobs=$(eval nproc)
+    m -j $Jobs "$@"
+}
+
+function reposync() {
+    local Jobs=$(eval nproc)
+    repo sync -j $Jobs "$@"
 }
 
 validate_current_shell
