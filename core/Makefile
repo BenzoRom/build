@@ -1,5 +1,11 @@
 # Put some miscellaneous rules here
 
+# Colors for logo
+CL_GRN="\033[32m"
+CL_CYN="\033[36m"
+CL_BNK=""
+CL_RST="\033[0m"
+
 # HACK: clear LOCAL_PATH from including last build target before calling
 # intermedites-dir-for
 LOCAL_PATH := $(BUILD_SYSTEM)
@@ -214,13 +220,13 @@ ifeq ($(TARGET_BUILD_VARIANT),user)
 
   # Dev. branches should have DISPLAY_BUILD_NUMBER set
   ifeq (true,$(DISPLAY_BUILD_NUMBER))
-    BUILD_DISPLAY_ID := $(BUILD_ID).$(BUILD_NUMBER_FROM_FILE) $(BUILD_KEYS)
+    BUILD_DISPLAY_ID := $(BUILD_ID)
   else
-    BUILD_DISPLAY_ID := $(BUILD_ID) $(BUILD_KEYS)
+    BUILD_DISPLAY_ID := $(BUILD_ID)
   endif
 else
   # Non-user builds should show detailed build information
-  BUILD_DISPLAY_ID := $(build_desc)
+  BUILD_DISPLAY_ID := $(BUILD_ID)
 endif
 
 # Accepts a whitespace separated list of product locales such as
@@ -2418,14 +2424,25 @@ $(INTERNAL_OTA_PACKAGE_TARGET): $(BUILT_TARGET_FILES_PACKAGE) \
 	   $(if $(OEM_OTA_CONFIG), -o $(OEM_OTA_CONFIG)) \
 	   $(BUILT_TARGET_FILES_PACKAGE) $@
 
-CUSTOM_TARGET_PACKAGE := $(PRODUCT_OUT)/benzo-$(ANDROID_NAME)-$(ROM_VERSION).zip
+CUSTOM_TARGET_PACKAGE := $(PRODUCT_OUT)/benzorom-$(PLATFORM_VERSION)-$(ROM_VERSION).zip
 
-.PHONY: otapackage bacon
+.PHONY: otapackage benzo
 otapackage: $(INTERNAL_OTA_PACKAGE_TARGET)
-bacon: otapackage
+benzo: otapackage
 	$(hide) ln -f $(INTERNAL_OTA_PACKAGE_TARGET) $(CUSTOM_TARGET_PACKAGE)
 	$(hide) $(MD5SUM) $(CUSTOM_TARGET_PACKAGE) > $(CUSTOM_TARGET_PACKAGE).md5sum
-	@echo "Package Complete: $(CUSTOM_TARGET_PACKAGE)"
+	@echo -e ${CL_BNK}""${CL_BNK}
+	@echo -e ${CL_CYN}" ▄▄▄▄   ▓█████  ███▄    █ ▒███████▒ ▒█████   ██▀███   ▒█████   ███▄ ▄███▓"${CL_RST}
+	@echo -e ${CL_CYN}"▓█████▄ ▓█   ▀  ██ ▀█   █ ▒ ▒ ▒ ▄▀░▒██▒  ██▒▓██ ▒ ██▒▒██▒  ██▒▓██▒▀█▀ ██▒"${CL_RST}
+	@echo -e ${CL_CYN}"▒██▒ ▄██▒███   ▓██  ▀█ ██▒░ ▒ ▄▀▒░ ▒██░  ██▒▓██ ░▄█ ▒▒██░  ██▒▓██    ▓██░"${CL_RST}
+	@echo -e ${CL_CYN}"▒██░█▀  ▒▓█  ▄ ▓██▒  ▐▌██▒  ▄▀▒   ░▒██   ██░▒██▀▀█▄  ▒██   ██░▒██    ▒██ "${CL_RST}
+	@echo -e ${CL_CYN}"░▓█  ▀█▓░▒████▒▒██░   ▓██░▒███████▒░ ████▓▒░░██▓ ▒██▒░ ████▓▒░▒██▒   ░██▒"${CL_RST}
+	@echo -e ${CL_CYN}"░▒▓███▀▒░░ ▒░ ░░ ▒░   ▒ ▒ ░▒▒ ▓░▒░▒░ ▒░▒░▒░ ░ ▒▓ ░▒▓░░ ▒░▒░▒░ ░ ▒░   ░  ░"${CL_RST}
+	@echo -e ${CL_CYN}"▒░▒   ░  ░ ░  ░░ ░░   ░ ▒░░░▒ ▒ ░ ▒  ░ ▒ ▒░   ░▒ ░ ▒░  ░ ▒ ▒░ ░  ░      ░"${CL_RST}
+	@echo -e ${CL_CYN}" ░    ░    ░      ░   ░ ░ ░ ░ ░ ░ ░░ ░ ░ ▒    ░░   ░ ░ ░ ░ ▒  ░      ░   "${CL_RST}
+	@echo -e ${CL_CYN}" ░         ░  ░         ░   ░ ░        ░ ░     ░         ░ ░         ░   "${CL_RST}
+	@echo -e ${CL_CYN}"      ░                   ░                                              "${CL_RST}
+	@echo -e ${CL_GRN}"Bacons Ready!!:"${CL_RST}" $(CUSTOM_TARGET_PACKAGE)"
 
 endif    # build_ota_package
 

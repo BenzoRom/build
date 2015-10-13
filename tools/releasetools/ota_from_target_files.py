@@ -464,6 +464,22 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   script.AppendExtra("ifelse(is_mounted(\"/system\"), unmount(\"/system\"));")
   device_specific.FullOTA_InstallBegin()
 
+  script.Print("._______ ._______.______  .______ ._______  ")
+  script.Print(": __   / : .____/:      \ \____  |: .___  \ ")
+  script.Print("|  |>  \ | : _/\ |       |/  ____|| :   |  |")
+  script.Print("|  |>   \|   /  \|   |   |\      ||     :  |")
+  script.Print("|_______/|_.: __/|___|   | \__:__| \_. ___/ ")
+  script.Print("            :/       |___|    :      :/     ")
+  script.Print("      .______  ._______  ._____.___  :      ")
+  script.Print("      : __   \ : .___  \ :         |")
+  script.Print("      |  \____|| :   |  ||   \  /  |")
+  script.Print("      |   :  \ |     :  ||   |\/   |")
+  script.Print("      |   |___\ \_. ___/ |___| |   |")
+  script.Print("      |___|       :/           |___|")
+  script.Print("                                    ")
+  script.Print("                Benzo Rom           ")
+  script.Print("                                    ")
+
   system_progress = 0.75
 
   if OPTIONS.wipe_user_data:
@@ -503,6 +519,8 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   common.CheckSize(boot_img.data, "boot.img", OPTIONS.info_dict)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
 
+  script.Print(" ")
+  script.Print("Flashing benzoCore..")
   script.ShowProgress(0.05, 5)
   script.WriteRawImage("/boot", "boot.img")
 

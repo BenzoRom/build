@@ -319,9 +319,9 @@ function settitle()
         local variant=$TARGET_BUILD_VARIANT
         local apps=$TARGET_BUILD_APPS
         if [ -z "$apps" ]; then
-            export PROMPT_COMMAND="echo -ne \"\033]0;[${arch}-${product}-${variant}] ${USER}@${HOSTNAME}: ${PWD}\007\""
+            export PROMPT_COMMAND="echo -ne \"\033]0;[${arch}-${product}-${variant}] benzo@buildbox: ${PWD}\007\""
         else
-            export PROMPT_COMMAND="echo -ne \"\033]0;[$arch $apps $variant] ${USER}@${HOSTNAME}: ${PWD}\007\""
+            export PROMPT_COMMAND="echo -ne \"\033]0;[$arch $apps $variant] benzo@buildbox: ${PWD}\007\""
         fi
     fi
 }
