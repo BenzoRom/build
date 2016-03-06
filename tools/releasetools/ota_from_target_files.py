@@ -422,6 +422,7 @@ def WriteFullOTAPackage(input_zip, output_zip):
       info_dict=OPTIONS.info_dict)
 
   assert HasRecoveryPatch(input_zip)
+  has_vendor_partition = "/vendor" in OPTIONS.info_dict["fstab"]
 
   metadata["ota-type"] = "BLOCK"
 
@@ -488,8 +489,12 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
 
   if OPTIONS.backuptool:
     script.Mount("/system")
+    if has_vendor_partition:
+      script.Mount("/vendor")
     script.RunBackup("backup")
     script.Unmount("/system")
+    if has_vendor_partition:
+      script.Unmount("/vendor")
 
   script.Print("._______ ._______.______  .______ ._______  ")
   script.Print(": __   / : .____/:      \ \____  |: .___  \ ")
@@ -548,11 +553,13 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
 
   if OPTIONS.backuptool:
     script.ShowProgress(0.02, 10)
-    if block_based:
-      script.Mount("/system")
+    script.Mount("/system")
+    if has_vendor_partition:
+      script.Mount("/vendor")
     script.RunBackup("restore")
-    if block_based:
-      script.Unmount("/system")
+    script.Unmount("/system")
+    if has_vendor_partition:
+      script.Unmount("/vendor")
 
   script.Print(" ")
   script.Print("Flashing benzoCore..")
