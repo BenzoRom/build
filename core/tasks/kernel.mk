@@ -178,10 +178,18 @@ ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
     endif
 endif
 
-ifneq ($(USE_CCACHE),)
-    ccache := $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_TAG)/ccache/ccache
-    # Check that the executable is here.
-    ccache := $(strip $(wildcard $(ccache)))
+# ccache
+ccache :=
+ifneq ($(filter-out false,$(USE_CCACHE)),)
+  # Use system if availible
+  ccache := $(shell which ccache)
+
+  # Set prebuilt if no system bin
+  ifeq ($(ccache),)
+      ccache := $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_TAG)/ccache/ccache
+      # Check that the executable is here.
+      ccache := $(strip $(wildcard $(ccache)))
+  endif
 endif
 
 ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
