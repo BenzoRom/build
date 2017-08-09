@@ -61,11 +61,13 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     dalvik.vm.image-dex2oat-Xmx=64m \
     dalvik.vm.dex2oat-Xms=64m \
     dalvik.vm.dex2oat-Xmx=512m \
-    ro.dalvik.vm.native.bridge=0 \
     dalvik.vm.usejit=true \
     dalvik.vm.usejitprofiles=true \
     dalvik.vm.dexopt.secondary=true \
     dalvik.vm.appimageformat=lz4
+
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.dalvik.vm.native.bridge=0
 
 # Make "boot" reasons only extract for faster turnaround.
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
