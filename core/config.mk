@@ -368,9 +368,9 @@ TARGET_CPU_ABI_LIST_32_BIT := $(subst $(space),$(comma),$(strip $(TARGET_CPU_ABI
 TARGET_CPU_ABI_LIST_64_BIT := $(subst $(space),$(comma),$(strip $(TARGET_CPU_ABI_LIST_64_BIT)))
 
 # GCC version selection
-TARGET_GCC_VERSION := 4.9
+TARGET_GCC_VERSION := 7.2
 ifdef TARGET_2ND_ARCH
-2ND_TARGET_GCC_VERSION := 4.9
+2ND_TARGET_GCC_VERSION := 7.2
 endif
 
 # Normalize WITH_STATIC_ANALYZER
