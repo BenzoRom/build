@@ -20,7 +20,7 @@ print_build_config_vars := \
   TARGET_2ND_ARCH_VARIANT \
   TARGET_2ND_CPU_VARIANT \
   BUILD_ID \
-  AUX_OS_VARIANT_LIST
+  BENZO_VERSION
 
 ifeq ($(TARGET_BUILD_PDK),true)
 print_build_config_vars += \
