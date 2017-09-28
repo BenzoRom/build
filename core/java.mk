@@ -59,6 +59,13 @@ ifneq (,$(strip $(LOCAL_MIN_SDK_VERSION)))
   my_jack_min_sdk_version := $(LOCAL_MIN_SDK_VERSION)
 endif
 
+ifdef LOCAL_MIN_SDK_VERSION
+  my_min_sdk_version := $(LOCAL_MIN_SDK_VERSION)
+else
+  my_min_sdk_version := $(call codename-or-sdk-to-sdk,\
+    $(PRIVATE_DEFAULT_APP_TARGET_SDK))
+endif
+
 proto_sources := $(filter %.proto,$(LOCAL_SRC_FILES))
 ifneq ($(proto_sources),)
 ifeq ($(LOCAL_PROTOC_OPTIMIZE_TYPE),micro)
@@ -735,12 +742,23 @@ $(LOCAL_MODULE)-findbugs : $(findbugs_html)
 endif  # full_classes_jar is defined
 
 ifneq (,$(filter-out current system_current test_current, $(LOCAL_SDK_VERSION)))
-$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_DEFAULT_APP_TARGET_SDK := $(LOCAL_SDK_VERSION)
-$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_SDK_VERSION := $(LOCAL_SDK_VERSION)
+  my_default_app_target_sdk := $(LOCAL_SDK_VERSION)
+  my_sdk_version := $(LOCAL_SDK_VERSION)
 else
-$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_DEFAULT_APP_TARGET_SDK := $(DEFAULT_APP_TARGET_SDK)
-$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_SDK_VERSION := $(PLATFORM_SDK_VERSION)
+  my_default_app_target_sdk := $(DEFAULT_APP_TARGET_SDK)
+  my_sdk_version := $(PLATFORM_SDK_VERSION)
 endif
+
+
+ifdef LOCAL_MIN_SDK_VERSION
+  my_min_sdk_version := $(LOCAL_MIN_SDK_VERSION)
+else
+  my_min_sdk_version := $(call codename-or-sdk-to-sdk,$(my_default_app_target_sdk))
+endif
+
+$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_DEFAULT_APP_TARGET_SDK := $(my_default_app_target_sdk)
+$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_SDK_VERSION := $(my_sdk_version)
+$(LOCAL_INTERMEDIATE_TARGETS): PRIVATE_MIN_SDK_VERSION := $(my_min_sdk_version)
 
 ifdef LOCAL_JACK_ENABLED
 $(LOCAL_INTERMEDIATE_TARGETS): \
