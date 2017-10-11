@@ -70,7 +70,7 @@ MAKE_FLAGS :=
 
 ifeq ($(KERNEL_ARCH),arm64)
   # Avoid "unsupported RELA relocation: 311" errors (R_AARCH64_ADR_GOT_PAGE)
-  MAKE_FLAGS += CFLAGS_MODULE="-fno-pic"
+  MAKE_FLAGS += -j23 CFLAGS_MODULE="-fno-pic"
   ifeq ($(TARGET_ARCH),arm)
     KERNEL_CONFIG_OVERRIDE := CONFIG_ANDROID_BINDER_IPC_32BIT=y
   endif
