@@ -503,6 +503,10 @@ else
 full_classes_processed_jar := $(full_classes_compiled_jar)
 endif
 
+ifeq ($(EXPERIMENTAL_USE_OPENJDK9),true)
+LOCAL_DX_FLAGS := $(filter-out --multi-dex,$(LOCAL_DX_FLAGS)) --multi-dex
+endif
+
 my_desugaring :=
 ifndef LOCAL_JACK_ENABLED
 ifndef LOCAL_IS_STATIC_JAVA_LIBRARY
