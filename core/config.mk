@@ -499,6 +499,18 @@ prebuilt_sdk_tools_bin := $(prebuilt_sdk_tools)/$(HOST_OS)/bin
 
 USE_PREBUILT_SDK_TOOLS_IN_PLACE := true
 
+# Use d8/r8 by default
+USE_D8_BY_DEFAULT := true
+ifndef USE_D8
+  USE_D8 := $(USE_D8_BY_DEFAULT)
+endif
+ifndef USE_R8
+  USE_R8 := $(USE_D8_BY_DEFAULT)
+endif
+
+D8_COMPAT_DX := prebuilts/r8/d8-compat-dx
+R8_COMPAT_PROGUARD := prebuilts/r8/r8-compat-proguard
+
 #
 # Tools that are prebuilts for TARGET_BUILD_APPS
 #
@@ -511,24 +523,29 @@ ifeq (,$(TARGET_BUILD_APPS)$(filter true,$(TARGET_BUILD_PDK)))
   SIGNAPK_JNI_LIBRARY_PATH := $(HOST_OUT_SHARED_LIBRARIES)
   ZIPALIGN := $(HOST_OUT_EXECUTABLES)/zipalign
 
-  ifndef DX_ALT_JAR
-    DX := $(HOST_OUT_EXECUTABLES)/dx
-    DX_COMMAND := $(DX) -JXms16M -JXmx2048M
+  ifeq ($(USE_D8),true)
+    DX := $(D8_COMPAT_DX)
   else
-    DX := $(DX_ALT_JAR)
-    DX_COMMAND := $(JAVA) -Xms16M -Xmx2048M -jar $(DX)
+    DX := $(HOST_OUT_EXECUTABLES)/dx
   endif
+
 else # TARGET_BUILD_APPS || TARGET_BUILD_PDK
   AIDL := $(prebuilt_sdk_tools_bin)/aidl
   AAPT := $(prebuilt_sdk_tools_bin)/aapt
   AAPT2 := $(prebuilt_sdk_tools_bin)/aapt2
-  DX := $(prebuilt_sdk_tools)/dx
-  DX_COMMAND := $(DX) -JXms16M -JXmx2048M
   MAINDEXCLASSES := $(prebuilt_sdk_tools)/mainDexClasses
-  ZIPALIGN := $(prebuilt_sdk_tools_bin)/zipalign
   SIGNAPK_JAR := $(prebuilt_sdk_tools)/lib/signapk$(COMMON_JAVA_PACKAGE_SUFFIX)
   SIGNAPK_JNI_LIBRARY_PATH := $(prebuilt_sdk_tools)/$(HOST_OS)/lib64
+  ZIPALIGN := $(prebuilt_sdk_tools_bin)/zipalign
+
+  ifeq ($(USE_D8),true)
+    DX := $(D8_COMPAT_DX)
+  else
+    DX := $(prebuilt_build_tools_wrappers)/dx
+  endif
 endif # TARGET_BUILD_APPS || TARGET_BUILD_PDK
+
+DX_COMMAND := $(DX) -JXms16M -JXmx2048M
 
 ifeq (,$(TARGET_BUILD_APPS))
   # Use RenderScript prebuilts for unbundled builds but not PDK builds

@@ -510,35 +510,35 @@ else
 full_classes_processed_jar := $(full_classes_compiled_jar)
 endif
 
-ifeq ($(EXPERIMENTAL_USE_OPENJDK9),true)
-LOCAL_DX_FLAGS := $(filter-out --multi-dex,$(LOCAL_DX_FLAGS)) --multi-dex
+# Run jarjar if necessary
+ifneq ($(strip $(LOCAL_JARJAR_RULES)),)
+$(full_classes_jarjar_jar): PRIVATE_JARJAR_RULES := $(LOCAL_JARJAR_RULES)
+$(full_classes_jarjar_jar): $(full_classes_processed_jar) $(LOCAL_JARJAR_RULES) | $(JARJAR)
+	@echo JarJar: $@
+	$(hide) $(JAVA) -jar $(JARJAR) process $(PRIVATE_JARJAR_RULES) $< $@
+else
+full_classes_jarjar_jar := $(full_classes_processed_jar)
 endif
+
+$(eval $(call copy-one-file,$(full_classes_jarjar_jar),$(full_classes_jar)))
+
+$(call define-jar-to-toc-rule, $(full_classes_jar))
 
 my_desugaring :=
 ifndef LOCAL_JACK_ENABLED
 ifndef LOCAL_IS_STATIC_JAVA_LIBRARY
 my_desugaring := true
 $(full_classes_desugar_jar): PRIVATE_DX_FLAGS := $(LOCAL_DX_FLAGS)
-$(full_classes_desugar_jar): $(full_classes_processed_jar) $(DESUGAR)
+$(full_classes_desugar_jar): $(full_classes_jar) $(DESUGAR)
 	$(desugar-classes-jar)
 endif
 endif
 
 ifndef my_desugaring
-full_classes_desugar_jar := $(full_classes_processed_jar)
+full_classes_desugar_jar := $(full_classes_jar)
 endif
 
-# Run jarjar if necessary
-ifneq ($(strip $(LOCAL_JARJAR_RULES)),)
-$(full_classes_jarjar_jar): PRIVATE_JARJAR_RULES := $(LOCAL_JARJAR_RULES)
-$(full_classes_jarjar_jar): $(full_classes_desugar_jar) $(LOCAL_JARJAR_RULES) | $(JARJAR)
-	@echo JarJar: $@
-	$(hide) $(JAVA) -jar $(JARJAR) process $(PRIVATE_JARJAR_RULES) $< $@
-else
-full_classes_jarjar_jar := $(full_classes_desugar_jar)
-endif
-
-LOCAL_FULL_CLASSES_PRE_JACOCO_JAR := $(full_classes_jarjar_jar)
+LOCAL_FULL_CLASSES_PRE_JACOCO_JAR := $(full_classes_desugar_jar)
 
 #######################################
 include $(BUILD_SYSTEM)/jacoco.mk
@@ -652,6 +652,9 @@ endif # LOCAL_INSTRUMENTATION_FOR
 endif  # LOCAL_PROGUARD_ENABLED is not nosystem
 
 proguard_flag_files := $(addprefix $(LOCAL_PATH)/, $(LOCAL_PROGUARD_FLAG_FILES))
+ifeq ($(USE_R8),true)
+proguard_flag_files += $(addprefix $(LOCAL_PATH)/, $(LOCAL_R8_FLAG_FILES))
+endif # USE_R8
 LOCAL_PROGUARD_FLAGS += $(addprefix -include , $(proguard_flag_files))
 
 ifdef LOCAL_TEST_MODULE_TO_PROGUARD_WITH
@@ -675,22 +678,25 @@ endif
 endif
 endif
 
+# If R8 is not enabled run Proguard.
+ifneq ($(USE_R8),true)
+# Changes to these dependencies need to be replicated below when using R8
+# instead of Proguard + dx.
 $(full_classes_proguard_jar): PRIVATE_PROGUARD_INJAR_FILTERS := $(proguard_injar_filters)
 $(full_classes_proguard_jar): PRIVATE_EXTRA_INPUT_JAR := $(extra_input_jar)
 $(full_classes_proguard_jar): PRIVATE_PROGUARD_FLAGS := $(legacy_proguard_flags) $(common_proguard_flags) $(LOCAL_PROGUARD_FLAGS)
 $(full_classes_proguard_jar) : $(full_classes_pre_proguard_jar) $(extra_input_jar) $(my_support_library_sdk_raise) $(common_proguard_flag_files) $(proguard_flag_files) | $(PROGUARD)
 	$(call transform-jar-to-proguard)
+else # !USE_R8
+# Running R8 instead of Proguard, proguarded jar is actually the pre-Proguarded jar.
+full_classes_proguard_jar := $(full_classes_pre_proguard_jar)
+endif # !USE_R8
 
 else  # LOCAL_PROGUARD_ENABLED not defined
 full_classes_proguard_jar := $(full_classes_pre_proguard_jar)
 endif # LOCAL_PROGUARD_ENABLED defined
 
-$(eval $(call copy-one-file,$(full_classes_proguard_jar),$(full_classes_jar)))
-
-$(call define-jar-to-toc-rule, $(full_classes_jar))
-
 ifneq ($(LOCAL_IS_STATIC_JAVA_LIBRARY),true)
-ifndef LOCAL_JACK_ENABLED
 $(built_dex_intermediate): PRIVATE_DX_FLAGS := $(LOCAL_DX_FLAGS)
 # If you instrument class files that have local variable debug information in
 # them emma does not correctly maintain the local variable table.
@@ -701,9 +707,26 @@ $(built_dex_intermediate): PRIVATE_DX_FLAGS := $(LOCAL_DX_FLAGS)
 ifeq ($(LOCAL_EMMA_INSTRUMENT),true)
 $(built_dex_intermediate): PRIVATE_DX_FLAGS += --no-locals
 endif
-$(built_dex_intermediate): $(full_classes_jar) $(DX)
+
+my_r8 :=
+ifdef LOCAL_PROGUARD_ENABLED
+ifeq ($(USE_R8),true)
+# These are the dependencies for the proguarded jar when running
+# Proguard + dx. They are used for the generated dex when using R8, as
+# R8 does Proguard + dx
+my_r8 := true
+$(built_dex_intermediate): PRIVATE_PROGUARD_INJAR_FILTERS := $(proguard_injar_filters)
+$(built_dex_intermediate): PRIVATE_EXTRA_INPUT_JAR := $(extra_input_jar)
+$(built_dex_intermediate): PRIVATE_PROGUARD_FLAGS := $(legacy_proguard_flags) $(common_proguard_flags) $(LOCAL_PROGUARD_FLAGS)
+$(built_dex_intermediate) : $(full_classes_proguard_jar) $(extra_input_jar) $(my_support_library_sdk_raise) $(common_proguard_flag_files) $(proguard_flag_files) $(legacy_proguard_lib_deps) $(R8_COMPAT_PROGUARD)
+	$(transform-jar-to-dex-r8)
+endif # USE_R8
+endif # LOCAL_PROGUARD_ENABLED
+
+ifndef my_r8
+$(built_dex_intermediate): $(full_classes_proguard_jar) $(DX)
 	$(transform-classes.jar-to-dex)
-endif # LOCAL_JACK_ENABLED is disabled
+endif
 
 $(built_dex): $(built_dex_intermediate)
 	@echo Copying: $@
