@@ -55,9 +55,9 @@ ifeq ($(my_clang),true)
   ifeq (1,$(words $(filter $(DISABLE_DTC),$(LOCAL_MODULE))))
     my_cc := $(AOSP_CLANG)
     my_cxx := $(AOSP_CLANG_CXX)
-    CLANG_CONFIG_arm_EXTRA_CFLAGS += -mcpu=cortex-a53
+    CLANG_CONFIG_arm_EXTRA_CFLAGS += -mcpu=kryo
   else
-    CLANG_CONFIG_arm_EXTRA_CFLAGS += -mcpu=cortex-a53
+    CLANG_CONFIG_arm_EXTRA_CFLAGS += -mcpu=kryo
   endif
 endif
 
@@ -88,7 +88,7 @@ DISABLE_POLLY_arm64 := \
   libjpeg_static libicuuc libwebp-decode libwebp-encode libpdfiumfxge libskia_static libaudioutils libpdfium% libLLVMSupport libsvoxpico \
   libRS_internal libvpx libopus libv8 libsonic libaudioflinger libstagefright% libFFTEm libRSCpuRef libbnnmlowp libmedia_jni libFraunhoferAAC \
   libavcdec libavcenc libmpeg2dec libwebrtc% libmusicbundle libreverb libscrypt_static libmpeg2dec libcrypto_static libcrypto libyuv% \
-  libjni_gallery_filters% libjni_gallery_filters_32 libLLVMSelectionDAG
+  libjni_gallery_filters% libjni_gallery_filters_32 libLLVMSelectionDAG libGLES_android
 
 # Set DISABLE_POLLY based on arch
 DISABLE_POLLY := \
