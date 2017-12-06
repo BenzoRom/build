@@ -225,7 +225,7 @@ def CreateImage(input_dir, info_dict, what, output_file, block_list=None):
                os.path.join(temp_dir, what))
   except OSError as e:
     # bogus error on my mac version?
-    #   File "./build/tools/releasetools/img_from_target_files"
+    #   File "./build/make/tools/releasetools/img_from_target_files"
     #     os.path.join(OPTIONS.input_tmp, "system"))
     # OSError: [Errno 17] File exists
     if e.errno == errno.EEXIST:
