@@ -2530,42 +2530,19 @@ define codename-or-sdk-to-sdk
 $(if $(filter $(1),$(PLATFORM_VERSION_CODENAME)),10000,$(1))
 endef
 
-# --add-opens is required because desugar reflects via java.lang.invoke.MethodHandles.Lookup
-define desugar-classes-jar
-@echo Desugar: $@
-@mkdir -p $(dir $@)
-$(hide) rm -f $@ $@.tmp
-@rm -rf $(dir $@)/desugar_dumped_classes
-@mkdir $(dir $@)/desugar_dumped_classes
-$(hide) $(JAVA) \
-    $(if $(EXPERIMENTAL_USE_OPENJDK9),--add-opens java.base/java.lang.invoke=ALL-UNNAMED,) \
-    -Djdk.internal.lambda.dumpProxyClasses=$(abspath $(dir $@))/desugar_dumped_classes \
-    -jar $(DESUGAR) \
-    $(addprefix --bootclasspath_entry ,$(call desugar-bootclasspath,$(PRIVATE_BOOTCLASSPATH))) \
-    $(addprefix --classpath_entry ,$(PRIVATE_ALL_JAVA_LIBRARIES)) \
-    --min_sdk_version $(call codename-or-sdk-to-sdk,$(PRIVATE_DEFAULT_APP_TARGET_SDK)) \
-    --allow_empty_bootclasspath \
-    $(if $(filter --core-library,$(PRIVATE_DX_FLAGS)),--core_library) \
-    -i $< -o $@.tmp
-    mv $@.tmp $@
-endef
-
-
 define transform-classes.jar-to-dex
 @echo "target Dex: $(PRIVATE_MODULE)"
 @mkdir -p $(dir $@)
-$(hide) rm -f $(dir $@)classes*.dex
+$(hide) rm -f $(dir $@)classes*.dex $(dir $@)d8_input.jar
+$(hide) $(ZIP2ZIP) -j -i $< -o $(dir $@)d8_input.jar "**/*.class"
 $(hide) $(DX_COMMAND) \
-    --dex --output=$(dir $@) \
-    --min-sdk-version=$(PRIVATE_MIN_SDK_VERSION) \
-    $(if $(NO_OPTIMIZE_DX), \
-        --no-optimize) \
-    $(if $(GENERATE_DEX_DEBUG), \
-	    --debug --verbose \
-	    --dump-to=$(@:.dex=.lst) \
-	    --dump-width=1000) \
-    $(PRIVATE_DX_FLAGS) \
-    $<
+    --output $(dir $@) \
+    --min-api $(PRIVATE_MIN_SDK_VERSION) \
+    $(subst --main-dex-list=, --main-dex-list , \
+    $(subst --no-locals, --release, \
+        $(filter-out --core-library --multi-dex --minimal-main-dex,$(PRIVATE_DX_FLAGS)))) \
+    $(dir $@)d8_input.jar
+$(hide) rm -f $(dir $@)d8_input.jar
 endef
 
 # Create a mostly-empty .jar file that we'll add to later.
@@ -2736,6 +2713,19 @@ define remove-timestamps-from-package
 $(hide) $(ZIPTIME) $@
 endef
 
+# Uncompress dex files embedded in an apk.
+#
+define uncompress-dexs
+$(hide) if (zipinfo $@ '*.dex' 2>/dev/null | grep -v ' stor ' >/dev/null) ; then \
+  tmpdir=$@.tmpdir; \
+  rm -rf $$tmpdir && mkdir $$tmpdir; \
+  unzip -q $@ '*.dex' -d $$tmpdir && \
+  zip -qd $@ '*.dex' && \
+  ( cd $$tmpdir && find . -type f | sort | zip -qD -X -0 ../$(notdir $@) -@ ) && \
+  rm -rf $$tmpdir; \
+  fi
+endef
+
 # Uncompress shared libraries embedded in an apk.
 #
 define uncompress-shared-libs
@@ -2779,6 +2769,14 @@ define copy-one-file
 $(2): $(1)
 	@echo "Copy: $$@"
 	$$(copy-file-to-target)
+endef
+
+define copy-and-uncompress-dexs
+$(2): $(1) $(ZIPALIGN)
+	@echo "Uncompress dexs in: $$@"
+	$$(copy-file-to-target)
+	$$(uncompress-dexs)
+	$$(align-package)
 endef
 
 # Copies many files.
@@ -2902,18 +2900,22 @@ endef
 # $(3): LOCAL_DEX_PREOPT, if nostripping then leave classes*.dex
 define dexpreopt-copy-jar
 $(2): $(1)
-	@echo $(if $(filter nostripping,$(3)),"Copy: $$@","Copy without dex: $$@")
+	@echo "Copy: $$@"
 	$$(copy-file-to-target)
 	$(if $(filter nostripping,$(3)),,$$(call dexpreopt-remove-classes.dex,$$@))
 endef
 
-# $(1): the .jar or .apk to remove classes.dex
+# $(1): the .jar or .apk to remove classes.dex. Note that if all dex files
+# are uncompressed in the archive, then dexopt will not do a copy of the dex
+# files and we should not strip.
 define dexpreopt-remove-classes.dex
-$(hide) zip --quiet --delete $(1) classes.dex; \
+$(hide) if (zipinfo $1 '*.dex' 2>/dev/null | grep -v ' stor ' >/dev/null) ; then \
+zip --quiet --delete $(1) classes.dex; \
 dex_index=2; \
 while zip --quiet --delete $(1) classes$${dex_index}.dex > /dev/null; do \
   let dex_index=dex_index+1; \
-done
+done \
+fi
 endef
 
 ###########################################################

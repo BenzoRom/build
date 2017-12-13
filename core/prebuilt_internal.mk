@@ -368,6 +368,9 @@ endif
 $(built_module) : $(my_prebuilt_src_file) | $(ZIPALIGN) $(SIGNAPK_JAR)
 	$(transform-prebuilt-to-target)
 	$(uncompress-shared-libs)
+ifeq (true, $(LOCAL_UNCOMPRESS_DEX))
+	$(uncompress-dexs)
+endif  # LOCAL_UNCOMPRESS_DEX
 ifdef LOCAL_DEX_PREOPT
 ifneq ($(BUILD_PLATFORM_ZIP),)
 	@# Keep a copy of apk with classes.dex unstripped

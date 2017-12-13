@@ -55,6 +55,8 @@ ifeq (true,$(EMMA_INSTRUMENT))
 ifeq (true,$(LOCAL_EMMA_INSTRUMENT))
 ifeq (true,$(EMMA_INSTRUMENT_STATIC))
 LOCAL_STATIC_JAVA_LIBRARIES += jacocoagent
+# Exclude jacoco classes from proguard
+LOCAL_PROGUARD_FLAGS += -include $(BUILD_SYSTEM)/proguard.jacoco.flags
 endif # LOCAL_EMMA_INSTRUMENT
 endif # EMMA_INSTRUMENT_STATIC
 else
@@ -81,7 +83,7 @@ else # !LOCAL_IS_STATIC_JAVA_LIBRARY
 $(common_javalib.jar): PRIVATE_DEX_FILE := $(built_dex)
 $(common_javalib.jar): PRIVATE_SOURCE_ARCHIVE := $(full_classes_pre_proguard_jar)
 $(common_javalib.jar): PRIVATE_DONT_DELETE_JAR_DIRS := $(LOCAL_DONT_DELETE_JAR_DIRS)
-$(common_javalib.jar) : $(built_dex) $(java_resource_sources) | $(ZIPTIME)
+$(common_javalib.jar) : $(built_dex) $(java_resource_sources) | $(ZIPTIME) $(ZIPALIGN)
 	@echo "target Jar: $(PRIVATE_MODULE) ($@)"
 ifdef LOCAL_JACK_ENABLED
 	$(create-empty-package)
@@ -93,6 +95,10 @@ ifdef LOCAL_JACK_ENABLED
 	$(add-carried-jack-resources)
 endif
 	$(remove-timestamps-from-package)
+ifeq (true, $(LOCAL_UNCOMPRESS_DEX))
+	$(uncompress-dexs)
+	$(align-package)
+endif  # LOCAL_UNCOMPRESS_DEX
 
 ifdef LOCAL_DEX_PREOPT
 ifneq ($(dexpreopt_boot_jar_module),) # boot jar

@@ -282,6 +282,8 @@ ifeq (true,$(EMMA_INSTRUMENT_STATIC))
 ifneq ($(LOCAL_SRC_FILES)$(LOCAL_STATIC_JAVA_LIBRARIES)$(LOCAL_SOURCE_FILES_ALL_GENERATED),)
 # Only add jacocoagent if the package contains some java code
 LOCAL_STATIC_JAVA_LIBRARIES += jacocoagent
+# Exclude jacoco classes from proguard
+LOCAL_PROGUARD_FLAGS += -include $(BUILD_SYSTEM)/proguard.jacoco.flags
 endif # Contains java code
 else
 ifdef LOCAL_SDK_VERSION
@@ -380,6 +382,7 @@ $(R_file_stamp) $(full_classes_compiled_jar) : $(data_binding_stamp)
 $(built_dex_intermediate) : $(data_binding_stamp)
 endif  # LOCAL_DATA_BINDING
 
+resource_export_package :=
 include $(BUILD_SYSTEM)/aapt_flags.mk
 
 ifeq ($(need_compile_res),true)
@@ -448,7 +451,6 @@ $(R_file_stamp): $(all_res_assets) $(full_android_manifest) $(RenderScript_file_
 
 $(proguard_options_file): $(R_file_stamp)
 
-resource_export_package :=
 ifdef LOCAL_EXPORT_PACKAGE_RESOURCES
 # Put this module's resources into a PRODUCT-agnositc package that
 # other packages can use to build their own PRODUCT-agnostic R.java (etc.)
@@ -609,8 +611,8 @@ $(LOCAL_BUILT_MODULE): PRIVATE_RES_PACKAGE := $(my_res_package)
 $(LOCAL_BUILT_MODULE) : $(my_res_package) $(AAPT2) | $(ACP)
 else
 $(LOCAL_BUILT_MODULE): PRIVATE_RESOURCE_LIST := $(all_res_assets)
-$(LOCAL_BUILT_MODULE) : $(all_res_assets) $(full_android_manifest) $(AAPT)
-endif
+$(LOCAL_BUILT_MODULE) : $(all_res_assets) $(full_android_manifest) $(AAPT) $(ZIPALIGN)
+endif  # LOCAL_USE_AAPT2
 ifdef LOCAL_COMPRESSED_MODULE
 $(LOCAL_BUILT_MODULE) : $(MINIGZIP)
 endif
@@ -636,6 +638,10 @@ ifeq ($(full_classes_jar),)
 else  # full_classes_jar
 	$(add-dex-to-package)
 endif  # full_classes_jar
+ifeq (true, $(LOCAL_UNCOMPRESS_DEX))
+	@# No need to align, sign-package below will do it.
+	$(uncompress-dexs)
+endif
 ifdef LOCAL_JACK_ENABLED
 	$(add-carried-jack-resources)
 endif
@@ -647,7 +653,7 @@ endif  # BUILD_PLATFORM_ZIP
 ifneq (nostripping,$(LOCAL_DEX_PREOPT))
 	$(call dexpreopt-remove-classes.dex,$@)
 endif
-endif
+endif  # LOCAL_DEX_PREOPT
 	$(sign-package)
 ifdef LOCAL_COMPRESSED_MODULE
 	$(compress-package)
@@ -671,6 +677,10 @@ $(built_odex): PRIVATE_DEX_FILE := $(built_dex)
 $(built_odex) : $(dir $(LOCAL_BUILT_MODULE))% : $(built_dex)
 	$(hide) mkdir -p $(dir $@) && rm -f $@
 	$(add-dex-to-package)
+ifeq (true, $(LOCAL_UNCOMPRESS_DEX))
+	$(uncompress-dexs)
+	$(align-package)
+endif
 	$(hide) mv $@ $@.input
 	$(call dexpreopt-one-file,$@.input,$@)
 	$(hide) rm $@.input
