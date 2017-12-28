@@ -551,7 +551,7 @@ $(eval $(call copy-one-file,$(full_classes_pre_proguard_jar),$(intermediates.COM
 
 # Run proguard if necessary
 ifdef LOCAL_PROGUARD_ENABLED
-ifneq ($(filter-out full custom nosystem obfuscation optimization,$(LOCAL_PROGUARD_ENABLED)),)
+ifneq ($(filter-out full custom obfuscation optimization,$(LOCAL_PROGUARD_ENABLED)),)
     $(warning while processing: $(LOCAL_MODULE))
     $(error invalid value for LOCAL_PROGUARD_ENABLED: $(LOCAL_PROGUARD_ENABLED))
 endif
@@ -587,11 +587,7 @@ jack_proguard_flags := -printmapping $(jack_dictionary)
 
 common_proguard_flags := -forceprocessing
 
-common_proguard_flag_files :=
-ifeq ($(filter nosystem,$(LOCAL_PROGUARD_ENABLED)),)
-common_proguard_flag_files += $(BUILD_SYSTEM)/proguard.flags
-endif
-# If this is a test package, add proguard keep flags for tests.
+common_proguard_flag_files := $(BUILD_SYSTEM)/proguard.flags
 ifneq ($(LOCAL_INSTRUMENTATION_FOR)$(filter tests,$(LOCAL_MODULE_TAGS)),)
 common_proguard_flags += -dontshrink # don't shrink tests by default
 endif # test package
@@ -640,7 +636,6 @@ $(full_classes_proguard_jar) : $(link_instr_intermediates_dir.COMMON)/proguard.c
 
 endif # no obfuscation
 endif # LOCAL_INSTRUMENTATION_FOR
-endif  # LOCAL_PROGUARD_ENABLED is not nosystem
 
 proguard_flag_files := $(addprefix $(LOCAL_PATH)/, $(LOCAL_PROGUARD_FLAG_FILES))
 ifeq ($(USE_R8),true)
