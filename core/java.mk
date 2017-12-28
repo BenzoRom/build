@@ -551,7 +551,7 @@ $(eval $(call copy-one-file,$(full_classes_pre_proguard_jar),$(intermediates.COM
 
 # Run proguard if necessary
 ifdef LOCAL_PROGUARD_ENABLED
-ifneq ($(filter-out full custom nosystem obfuscation optimization shrinktests,$(LOCAL_PROGUARD_ENABLED)),)
+ifneq ($(filter-out full custom nosystem obfuscation optimization,$(LOCAL_PROGUARD_ENABLED)),)
     $(warning while processing: $(LOCAL_MODULE))
     $(error invalid value for LOCAL_PROGUARD_ENABLED: $(LOCAL_PROGUARD_ENABLED))
 endif
@@ -590,19 +590,10 @@ common_proguard_flags := -forceprocessing
 common_proguard_flag_files :=
 ifeq ($(filter nosystem,$(LOCAL_PROGUARD_ENABLED)),)
 common_proguard_flag_files += $(BUILD_SYSTEM)/proguard.flags
-ifeq ($(LOCAL_EMMA_INSTRUMENT),true)
-ifdef LOCAL_JACK_ENABLED
-common_proguard_flag_files += $(BUILD_SYSTEM)/proguard.jacoco.flags
-else
-common_proguard_flags += -include $(BUILD_SYSTEM)/proguard.emma.flags
-endif # LOCAL_JACK_ENABLED
 endif
 # If this is a test package, add proguard keep flags for tests.
 ifneq ($(LOCAL_INSTRUMENTATION_FOR)$(filter tests,$(LOCAL_MODULE_TAGS)),)
-common_proguard_flag_files += $(BUILD_SYSTEM)/proguard_tests.flags
-ifeq ($(filter shrinktests,$(LOCAL_PROGUARD_ENABLED)),)
 common_proguard_flags += -dontshrink # don't shrink tests by default
-endif # shrinktests
 endif # test package
 ifneq ($(common_proguard_flag_files),)
 common_proguard_flags += $(addprefix -include , $(common_proguard_flag_files))
