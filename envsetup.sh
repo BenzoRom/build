@@ -637,6 +637,7 @@ function lunch()
       unset TARGET_PLATFORM_VERSION
     fi
     export TARGET_BUILD_TYPE=release
+    export NINJA=$(get_build_var NINJA)
 
     echo
 
