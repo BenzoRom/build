@@ -125,6 +125,8 @@ framework_res_package_export_deps := \
 endif
 endif
 
+include $(BUILD_SYSTEM)/aapt_flags.mk
+
 # add --non-constant-id to prevent inlining constants.
 # AAR needs text symbol file R.txt.
 ifdef LOCAL_USE_AAPT2

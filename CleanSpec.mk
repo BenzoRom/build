@@ -428,6 +428,12 @@ $(call add-clean-step, rm -rf $(PRODUCT_OUT)/vendor/nativetest*)
 $(call add-clean-step, rm -rf $(PRODUCT_OUT)/root/sbin/adbd)
 $(call add-clean-step, rm -rf $(PRODUCT_OUT)/symbols/sbin/adbd)
 
+# Remove old aidl/logtags files that may be in the generated source directory
+$(call add-clean-step, rm -rf $(OUT_DIR)/target/common/obj/*/*_intermediates/src)
+$(call add-clean-step, rm -f $(OUT_DIR)/target/common/obj/*/*_intermediates/java-source-list)
+$(call add-clean-step, rm -rf $(OUT_DIR)/host/common/obj/*/*_intermediates/src)
+$(call add-clean-step, rm -f $(OUT_DIR)/host/common/obj/*/*_intermediates/java-source-list)
+
 # ************************************************
 # NEWER CLEAN STEPS MUST BE AT THE END OF THE LIST
 # ************************************************

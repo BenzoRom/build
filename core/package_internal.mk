@@ -380,6 +380,8 @@ $(R_file_stamp) $(full_classes_compiled_jar) : $(data_binding_stamp)
 $(built_dex_intermediate) : $(data_binding_stamp)
 endif  # LOCAL_DATA_BINDING
 
+include $(BUILD_SYSTEM)/aapt_flags.mk
+
 ifeq ($(need_compile_res),true)
 
 ###############################
@@ -442,7 +444,7 @@ $(R_file_stamp): $(all_res_assets) $(full_android_manifest) $(RenderScript_file_
 	@echo "target R.java/Manifest.java: $(PRIVATE_MODULE) ($@)"
 	@rm -rf $@ && mkdir -p $(dir $@)
 	$(create-resource-java-files)
-	$(call find-generated-R.java)
+	$(call find-generated-R.java,$@)
 
 $(proguard_options_file): $(R_file_stamp)
 
