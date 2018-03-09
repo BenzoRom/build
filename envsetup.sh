@@ -1690,12 +1690,3 @@ unset f
 addcompletions
 
 export ANDROID_BUILD_TOP=$(gettop)
-
-# Setup build environment for Arch Linux
-if [ -f "/etc/arch-release" ]; then
-    if [ ! -f "tools/arch/python/bin/python2" ]; then
-        virtualenv2 tools/arch/python > /dev/null
-    fi
-    source tools/arch/python/bin/activate
-    ln -s /usr/lib/python2.7/* tools/arch/python/lib/python2.7/ &> /dev/null
-fi
