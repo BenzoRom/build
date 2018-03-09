@@ -70,6 +70,21 @@ ifeq (SHARED_LIBRARIES,$(LOCAL_MODULE_CLASS))
   ifeq ($(DISABLE_RELOCATION_PACKER),true)
     my_pack_module_relocations := false
   endif
+
+  # Use LLD only if it's not disabled by LOCAL_USE_CLANG_LLD,
+  # and enabled by LOCAL_USE_CLANG_LLD or USE_CLANG_LLD.
+  my_use_clang_lld := false
+  ifeq (,$(filter 0 false,$(LOCAL_USE_CLANG_LLD)))
+    ifneq (,$(filter 1 true,$(LOCAL_USE_CLANG_LLD) $(USE_CLANG_LLD)))
+      my_use_clang_lld := true
+    endif
+  endif
+
+  # Relocation packer does not work with LLD yet.
+  # my_use_clang_lld might be used befor set up in binary.mk
+  ifeq ($(my_use_clang_lld),true)
+    my_pack_module_relocations := false
+  endif
 endif
 
 ifneq ($(filter STATIC_LIBRARIES SHARED_LIBRARIES,$(LOCAL_MODULE_CLASS)),)

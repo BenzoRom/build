@@ -51,6 +51,7 @@ $(SOONG_VARIABLES): FORCE
 	echo '    "Eng": $(if $(filter eng,$(TARGET_BUILD_VARIANT)),true,false),'; \
 	echo '    "VendorPath": "$(TARGET_COPY_OUT_VENDOR)",'; \
 	echo ''; \
+	echo '    "UseClangLld": $(if $(filter 1 true,$(USE_CLANG_LLD)),true,false),'; \
 	echo '    "ClangTidy": $(if $(filter 1 true,$(WITH_TIDY)),true,false),'; \
 	echo '    "TidyChecks": "$(WITH_TIDY_CHECKS)",'; \
 	echo ''; \
