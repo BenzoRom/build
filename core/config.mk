@@ -593,6 +593,7 @@ LEX := $(prebuilt_build_tools_bin)/flex
 MAKEPARALLEL := $(prebuilt_build_tools_bin)/makeparallel
 SOONG_JAVAC_WRAPPER := $(SOONG_HOST_OUT_EXECUTABLES)/soong_javac_wrapper
 SOONG_ZIP := $(SOONG_HOST_OUT_EXECUTABLES)/soong_zip
+XZ := $(prebuilt_build_tools)/$(HOST_PREBUILT_TAG)/bin/xz
 ZIP2ZIP := $(SOONG_HOST_OUT_EXECUTABLES)/zip2zip
 ZIPTIME := $(prebuilt_build_tools_bin)/ziptime
 
