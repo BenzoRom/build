@@ -1690,3 +1690,10 @@ unset f
 addcompletions
 
 export ANDROID_BUILD_TOP=$(gettop)
+
+# Make sure python2.7 is used
+PYTHON=$(python -V 2>&1 | sed 's/.* \([0-9]\).\([0-9]\).*/\1\2/')
+if [[ "$PYTHON" > "27" ]]
+then
+export PATH="$(gettop)/vendor/benzo/tools/python:$PATH";
+fi
