@@ -23,9 +23,8 @@ BLUETOOTH := libbluetooth_jni bluetooth.mapsapi bluetooth.default bluetooth.maps
 
 # DTC module disable
 DISABLE_DTC_arm :=
-DISABLE_DTC_arm64 := libdng_sdk libdng% libjni_filtershow_filters busybox libfdlibm libhistory% sensorservice libwfds libsensorservice  \
-			libv8base libhevcdec libjni_eglfence% libjni_jpegstream% libjni_gallery_filters% libblasV8 libF77blasV8 \
-			libF77blas libbnnmlowpV8 libplatformprotos libGLES_android
+DISABLE_DTC_arm64 := libv8base libblasV8 libF77blasV8 libF77blas libbnnmlowpV8 libfdlibm libGLES_android libwebrtc% libmusicbundle libreverb \
+                     camera.msm8996 libmmlib2d_interface libmmjpeg_interface libmmcamera_interface libqomx_core
 
 # Set DISABLE_DTC based on arch
 DISABLE_DTC := \
@@ -79,15 +78,15 @@ POLLY := -O3 -mllvm -polly \
   -mllvm -polly-opt-simplify-deps=no \
   -mllvm -polly-rtc-max-arrays-per-group=40
 
-# Disable modules that dont work with Polly. Split up by arch.
-DISABLE_POLLY_arm := \
-  libjpeg_static libicuuc
+# Disable modules that dont work with Polly.
+DISABLE_POLLY_arm :=
+DISABLE_POLLY_arm64 :=
 
-DISABLE_POLLY_arm64 := \
-  libjpeg_static libicuuc libwebp-decode libwebp-encode libpdfiumfxge libskia_static libaudioutils libpdfium% libLLVMSupport libsvoxpico \
-  libRS_internal libvpx libopus libv8 libsonic libaudioflinger libstagefright% libFFTEm libRSCpuRef libbnnmlowp libmedia_jni libFraunhoferAAC \
-  libavcdec libavcenc libmpeg2dec libwebrtc% libmusicbundle libreverb libscrypt_static libmpeg2dec libcrypto_static libcrypto libyuv% \
-  libjni_gallery_filters% libjni_gallery_filters_32 libLLVMSelectionDAG
+# lld linker
+LLD_FLAG := -fuse-ld=lld
+
+# Disable lld
+DISABLE_LLD := recovery
 
 # Set DISABLE_POLLY based on arch
 DISABLE_POLLY := \
@@ -112,13 +111,18 @@ ifeq ($(my_32_64_bit_suffix),32)
   endif
 endif
 
+# Set LLD_FLAG based on DISABLE_LLD
+ifeq (1,$(words $(filter $(DISABLE_LLD),$(LOCAL_MODULE))))
+  LLD_FLAG := -fuse-ld=gold
+endif
+
 ifeq ($(my_clang),true)
   ifndef LOCAL_IS_HOST_MODULE
     # Possible conflicting flags will be filtered out to reduce argument
     # size and to prevent issues with locally set optimizations.
     my_cflags := $(filter-out -Wall -Werror -g -O3 -O2 -Os -O1 -O0 -Og -Oz -Wextra -Weverything,$(my_cflags))
     # Enable -O3 and Polly if not blacklisted, otherwise use -Os.
-    my_cflags += $(POLLY) -Qunused-arguments -Wno-unknown-warning-option -w -fuse-ld=gold
-    my_ldflags += -fuse-ld=gold
+    my_cflags += $(POLLY) -Qunused-arguments -Wno-unknown-warning-option -w $(LLD_FLAG)
+    my_ldflags += $(LLD_FLAG)
   endif
 endif
