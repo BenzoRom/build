@@ -215,8 +215,8 @@ ifeq ($(TARGET_KERNEL_CLANG_COMPILE),true)
         # Find the clang-* directory containing the specified version
         KERNEL_CLANG_VERSION := $(TARGET_KERNEL_CLANG_VERSION)
     else
-        # Only set the latest version of clang if TARGET_KERNEL_CLANG_VERSION hasn't been set by the device config
-        KERNEL_CLANG_VERSION := $(shell ls -d $(ANDROID_BUILD_TOP)/prebuilts/clang/host/$(HOST_OS)-x86/clang-* | xargs -n 1 basename | tail -1)
+        # Use the default version of clang if TARGET_KERNEL_CLANG_VERSION hasn't been set by the device config
+        KERNEL_CLANG_VERSION := $(LLVM_PREBUILTS_VERSION)
     endif
     TARGET_KERNEL_CLANG_PATH ?= $(ANDROID_BUILD_TOP)/prebuilts/clang/host/$(HOST_OS)-x86/$(KERNEL_CLANG_VERSION)/bin
     ifeq ($(KERNEL_ARCH),arm64)
