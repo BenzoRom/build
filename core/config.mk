@@ -586,10 +586,10 @@ JACK := $(HOST_OUT_EXECUTABLES)/jack
 # external/bison/data.
 # To run bison from elsewhere you need to set up enviromental variable
 # BISON_PKGDATADIR.
-BISON_PKGDATADIR := $(PWD)/external/bison/data
-BISON := prebuilts/misc/$(BUILD_OS)-$(HOST_PREBUILT_ARCH)/bison/bison
+BISON_PKGDATADIR := $(PWD)/prebuilts/build-tools/common/bison
+BISON := $(prebuilt_build_tools_bin)/bison
 YACC := $(BISON) -d
-BISON_DATA := $(wildcard external/bison/data/* external/bison/data/*/*)
+BISON_DATA := $(wildcard $(BISON_PKGDATADIR)/* $(BISON_PKGDATADIR)/*/*)
 
 YASM := prebuilts/misc/$(BUILD_OS)-$(HOST_PREBUILT_ARCH)/yasm/yasm
 
