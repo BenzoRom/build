@@ -82,12 +82,6 @@ POLLY := -O3 -mllvm -polly \
 DISABLE_POLLY_arm :=
 DISABLE_POLLY_arm64 :=
 
-# lld linker
-LLD_FLAG := -fuse-ld=lld
-
-# Disable lld
-DISABLE_LLD := recovery
-
 # Set DISABLE_POLLY based on arch
 DISABLE_POLLY := \
   $(DISABLE_POLLY_$(TARGET_ARCH)) \
@@ -111,18 +105,12 @@ ifeq ($(my_32_64_bit_suffix),32)
   endif
 endif
 
-# Set LLD_FLAG based on DISABLE_LLD
-ifeq (1,$(words $(filter $(DISABLE_LLD),$(LOCAL_MODULE))))
-  LLD_FLAG := -fuse-ld=gold
-endif
-
 ifeq ($(my_clang),true)
   ifndef LOCAL_IS_HOST_MODULE
     # Possible conflicting flags will be filtered out to reduce argument
     # size and to prevent issues with locally set optimizations.
     my_cflags := $(filter-out -Wall -Werror -g -O3 -O2 -Os -O1 -O0 -Og -Oz -Wextra -Weverything,$(my_cflags))
     # Enable -O3 and Polly if not blacklisted, otherwise use -Os.
-    my_cflags += $(POLLY) -Qunused-arguments -Wno-unknown-warning-option -w $(LLD_FLAG)
-    my_ldflags += $(LLD_FLAG)
+    my_cflags += $(POLLY) -Qunused-arguments -Wno-unknown-warning-option -w
   endif
 endif
