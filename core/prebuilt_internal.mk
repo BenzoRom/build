@@ -6,6 +6,8 @@
 ##
 ###########################################################
 
+include $(BUILD_SYSTEM)/use_lld_setup.mk
+
 ifneq ($(LOCAL_PREBUILT_LIBS),)
 $(error dont use LOCAL_PREBUILT_LIBS anymore LOCAL_PATH=$(LOCAL_PATH))
 endif
@@ -69,15 +71,6 @@ ifeq (SHARED_LIBRARIES,$(LOCAL_MODULE_CLASS))
 
   ifeq ($(DISABLE_RELOCATION_PACKER),true)
     my_pack_module_relocations := false
-  endif
-
-  # Use LLD only if it's not disabled by LOCAL_USE_CLANG_LLD,
-  # and enabled by LOCAL_USE_CLANG_LLD or USE_CLANG_LLD.
-  my_use_clang_lld := false
-  ifeq (,$(filter 0 false,$(LOCAL_USE_CLANG_LLD)))
-    ifneq (,$(filter 1 true,$(LOCAL_USE_CLANG_LLD) $(USE_CLANG_LLD)))
-      my_use_clang_lld := true
-    endif
   endif
 
   # Relocation packer does not work with LLD yet.
