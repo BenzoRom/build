@@ -2045,6 +2045,7 @@ build_ota_package := false
 endif
 
 ifeq ($(build_ota_package),true)
+$(shell mkdir -p $(HOST_OUT_EXECUTABLES))
 $(shell cp $(FEC) $(HOST_OUT_EXECUTABLES)/fec)
 OTATOOLS :=  $(HOST_OUT_EXECUTABLES)/minigzip \
   $(HOST_OUT_EXECUTABLES)/aapt \
