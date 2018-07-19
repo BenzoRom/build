@@ -1837,7 +1837,7 @@ define transform-to-stripped
 @echo "$($(PRIVATE_PREFIX)DISPLAY) Strip: $(PRIVATE_MODULE) ($@)"
 @mkdir -p $(dir $@)
 $(hide) $(PRIVATE_STRIP) $(PRIVATE_STRIP_ALL_FLAGS) $< \
-  $(PRIVATE_STRIP_O_FLAG) $@ \
+  -o $@ \
   $(if $(PRIVATE_NO_DEBUGLINK),,$(TARGET_STRIP_EXTRA))
 endef
 
@@ -1847,7 +1847,7 @@ define transform-to-stripped-keep-mini-debug-info
 $(hide) rm -f $@ $@.dynsyms $@.funcsyms $@.keep_symbols $@.debug $@.mini_debuginfo.xz
 if $(PRIVATE_STRIP) $(PRIVATE_STRIP_ALL_FLAGS) \
   --remove-section .comment $< \
-  $(PRIVATE_STRIP_O_FLAG) $@; then  \
+  -o $@; then  \
   $(PRIVATE_OBJCOPY) --only-keep-debug $< $@.debug && \
   $(PRIVATE_NM) -D $< --format=posix --defined-only | awk '{ print $$1 }' | sort >$@.dynsyms && \
   $(PRIVATE_NM) $< --format=posix --defined-only | awk '{ if ($$2 == "T" || $$2 == "t" || $$2 == "D") print $$1 }' | sort >$@.funcsyms && \
