@@ -411,6 +411,9 @@ ifdef TARGET_2ND_ARCH
 2ND_TARGET_GCC_VERSION := 4.9
 endif
 
+# define clang/llvm versions and base directory.
+include $(BUILD_SYSTEM)/clang/versions.mk
+
 # Normalize WITH_STATIC_ANALYZER
 ifeq ($(strip $(WITH_STATIC_ANALYZER)),0)
   WITH_STATIC_ANALYZER :=
