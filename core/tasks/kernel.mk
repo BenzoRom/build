@@ -169,7 +169,7 @@ endif
 endif
 
 ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
-    TARGET_KERNEL_CLANG_PATH ?= $(ANDROID_BUILD_TOP)/prebuilts/clang/host/$(HOST_OS)-x86/$(TARGET_KERNEL_CLANG_VERSION)/bin
+    TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_OS)-x86/$(TARGET_KERNEL_CLANG_VERSION)/bin
     ifeq ($(KERNEL_ARCH),arm64)
         KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=aarch64-linux-gnu-
     else ifeq ($(KERNEL_ARCH),arm)
@@ -187,7 +187,7 @@ ifneq ($(filter-out false,$(USE_CCACHE)),)
 
   # Set prebuilt if no system bin
   ifeq ($(ccache),)
-      ccache := $(ANDROID_BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_TAG)/ccache/ccache
+      ccache := $(BUILD_TOP)/prebuilts/misc/$(HOST_PREBUILT_TAG)/ccache/ccache
       # Check that the executable is here.
       ccache := $(strip $(wildcard $(ccache)))
   endif
@@ -221,7 +221,7 @@ define clean-module-folder
 endef
 
 ifeq ($(HOST_OS),darwin)
-  MAKE_FLAGS += C_INCLUDE_PATH=$(ANDROID_BUILD_TOP)/external/elfutils/libelf/
+  MAKE_FLAGS += C_INCLUDE_PATH=$(BUILD_TOP)/external/elfutils/libelf/
 endif
 
 ifeq ($(TARGET_KERNEL_MODULES),)
