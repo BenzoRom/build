@@ -113,3 +113,5 @@ ifeq ($(HOST_OS),darwin)
   KERNEL_MAKE_FLAGS += C_INCLUDE_PATH=$(BUILD_TOP)/external/elfutils/libelf:/usr/local/opt/openssl/include
   KERNEL_MAKE_FLAGS += LIBRARY_PATH=/usr/local/opt/openssl/lib
 endif
+
+include build/make/core/BoardConfigSoong.mk
