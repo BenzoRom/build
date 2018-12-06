@@ -4,31 +4,35 @@ cat <<EOF
 Run "m help" for help with the build system itself.
 
 Invoke ". build/envsetup.sh" from your shell to add the following functions to your environment:
-- lunch:     lunch <product_name>-<build_variant>
-             Selects <product_name> as the product to build, and <build_variant> as the variant to
-             build, and stores those selections in the environment to be read by subsequent
-             invocations of 'm' etc.
-- tapas:     tapas [<App1> <App2> ...] [arm|x86|mips|arm64|x86_64|mips64] [eng|userdebug|user]
-- croot:     Changes directory to the top of the tree.
-- m:         Makes from the top of the tree.
-- mm:        Builds all of the modules in the current directory, but not their dependencies.
-- mmm:       Builds all of the modules in the supplied directories, but not their dependencies.
-             To limit the modules being built use the syntax: mmm dir/:target1,target2.
-- mma:       Builds all of the modules in the current directory, and their dependencies.
-- mmma:      Builds all of the modules in the supplied directories, and their dependencies.
-- provision: Flash device with all required partitions. Options will be passed on to fastboot.
-- cgrep:     Greps on all local C/C++ files.
-- ggrep:     Greps on all local Gradle files.
-- jgrep:     Greps on all local Java files.
-- resgrep:   Greps on all local res/*.xml files.
-- mangrep:   Greps on all local AndroidManifest.xml files.
-- mgrep:     Greps on all local Makefiles files.
-- sepgrep:   Greps on all local sepolicy files.
-- sgrep:     Greps on all local source files.
-- godir:     Go to the directory containing a file.
-- mka:       Builds using SCHED_BATCH on all processors
-- reposync:  Parallel repo sync using ionice and SCHED_BATCH
-- aospremote:   Add git remote for matching AOSP repository.
+- lunch:      lunch <product_name>-<build_variant>
+              Selects <product_name> as the product to build, and <build_variant> as the variant to
+              build, and stores those selections in the environment to be read by subsequent
+              invocations of 'm' etc.
+- tapas:      tapas [<App1> <App2> ...] [arm|x86|mips|arm64|x86_64|mips64] [eng|userdebug|user]
+- croot:      Changes directory to the top of the tree.
+- m:          Makes from the top of the tree.
+- mm:         Builds all of the modules in the current directory, but not their dependencies.
+- mmm:        Builds all of the modules in the supplied directories, but not their dependencies.
+              To limit the modules being built use the syntax: mmm dir/:target1,target2.
+- mma:        Builds all of the modules in the current directory, and their dependencies.
+- mmma:       Builds all of the modules in the supplied directories, and their dependencies.
+- provision:  Flash device with all required partitions. Options will be passed on to fastboot.
+- cgrep:      Greps on all local C/C++ files.
+- ggrep:      Greps on all local Gradle files.
+- jgrep:      Greps on all local Java files.
+- resgrep:    Greps on all local res/*.xml files.
+- mangrep:    Greps on all local AndroidManifest.xml files.
+- mgrep:      Greps on all local Makefiles files.
+- sepgrep:    Greps on all local sepolicy files.
+- sgrep:      Greps on all local source files.
+- godir:      Go to the directory containing a file.
+- mka:        Builds using SCHED_BATCH on all processors.
+- reposync:   Parallel repo sync using ionice and SCHED_BATCH.
+- aospremote: Add git remote for matching AOSP repository.
+- allmod:     List all modules.
+- gomod:      Go to the directory containing a module.
+- pathmod:    Get the directory containing a module.
+- refreshmod: Refresh list of modules for allmod/gomod.
 
 Environment options:
 - SANITIZE_HOST: Set to 'true' to use ASAN for all host modules. Note that
@@ -378,6 +382,9 @@ function addcompletions()
     fi
 
     complete -C "bit --tab" bit
+
+    complete -F _complete_android_module_names gomod
+    complete -F _complete_android_module_names m
 }
 
 function choosetype()
@@ -1590,6 +1597,92 @@ function aospremote()
     fi
     git remote add aosp https://android.googlesource.com/$PFX$PROJECT
     echo "Remote 'aosp' created"
+}
+
+# Update module-info.json in out.
+function refreshmod() {
+    if [ ! "$ANDROID_PRODUCT_OUT" ]; then
+        echo "No ANDROID_PRODUCT_OUT. Try running 'lunch' first." >&2
+        return 1
+    fi
+
+    echo "Refreshing modules (building module-info.json). Log at $ANDROID_PRODUCT_OUT/module-info.json.build.log." >&2
+
+    # for the output of the next command
+    mkdir -p $ANDROID_PRODUCT_OUT || return 1
+
+    # Note, can't use absolute path because of the way make works.
+    m out/target/product/$(get_build_var TARGET_DEVICE)/module-info.json \
+        > $ANDROID_PRODUCT_OUT/module-info.json.build.log 2>&1
+}
+
+# List all modules for the current device, as cached in module-info.json. If any build change is
+# made and it should be reflected in the output, you should run 'refreshmod' first.
+function allmod() {
+    if [ ! "$ANDROID_PRODUCT_OUT" ]; then
+        echo "No ANDROID_PRODUCT_OUT. Try running 'lunch' first." >&2
+        return 1
+    fi
+
+    if [ ! -f "$ANDROID_PRODUCT_OUT/module-info.json" ]; then
+        echo "Could not find module-info.json. It will only be built once, and it can be updated with 'refreshmod'" >&2
+        refreshmod || return 1
+    fi
+
+    python -c "import json; print '\n'.join(sorted(json.load(open('$ANDROID_PRODUCT_OUT/module-info.json')).keys()))"
+}
+
+# Get the path of a specific module in the android tree, as cached in module-info.json. If any build change
+# is made, and it should be reflected in the output, you should run 'refreshmod' first.
+function pathmod() {
+    if [ ! "$ANDROID_PRODUCT_OUT" ]; then
+        echo "No ANDROID_PRODUCT_OUT. Try running 'lunch' first." >&2
+        return 1
+    fi
+
+    if [[ $# -ne 1 ]]; then
+        echo "usage: pathmod <module>" >&2
+        return 1
+    fi
+
+    if [ ! -f "$ANDROID_PRODUCT_OUT/module-info.json" ]; then
+        echo "Could not find module-info.json. It will only be built once, and it can be updated with 'refreshmod'" >&2
+        refreshmod || return 1
+    fi
+
+    local relpath=$(python -c "import json, os
+module = '$1'
+module_info = json.load(open('$ANDROID_PRODUCT_OUT/module-info.json'))
+if module not in module_info:
+    exit(1)
+print module_info[module]['path'][0]" 2>/dev/null)
+
+    if [ -z "$relpath" ]; then
+        echo "Could not find module '$1' (try 'refreshmod' if there have been build changes?)." >&2
+        return 1
+    else
+        echo "$ANDROID_BUILD_TOP/$relpath"
+    fi
+}
+
+# Go to a specific module in the android tree, as cached in module-info.json. If any build change
+# is made, and it should be reflected in the output, you should run 'refreshmod' first.
+function gomod() {
+    if [[ $# -ne 1 ]]; then
+        echo "usage: gomod <module>" >&2
+        return 1
+    fi
+
+    local path="$(pathmod $@)"
+    if [ -z "$path" ]; then
+        return 1
+    fi
+    cd $path
+}
+
+function _complete_android_module_names() {
+    local word=${COMP_WORDS[COMP_CWORD]}
+    COMPREPLY=( $(allmod | grep -E "^$word") )
 }
 
 # Print colored exit condition
