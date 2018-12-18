@@ -256,6 +256,14 @@ ifeq ($(KERNEL_ARCH),arm64)
    KERNEL_CROSS_COMPILE += CROSS_COMPILE_ARM32="arm-linux-androidkernel-"
 endif
 
+# Change user@host for kernel builds
+ifneq ($(KBUILD_USER),)
+KERNEL_CROSS_COMPILE += KBUILD_BUILD_USER=$(KBUILD_USER)
+endif
+ifneq ($(KBUILD_HOST),)
+KERNEL_CROSS_COMPILE += KBUILD_BUILD_HOST=$(KBUILD_HOST)
+endif
+
 ccache =
 
 ifeq ($(HOST_OS),darwin)
