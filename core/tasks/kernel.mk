@@ -231,13 +231,13 @@ ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
 endif
 
 ifneq ($(USE_CCACHE),)
-    # Detect if the system already has ccache installed to use instead of the prebuilt
-    ccache := $(shell which ccache)
-
-    ifeq ($(ccache),)
+    ifeq ($(USE_SYSTEM_CCACHE),)
         ccache := $(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin/ccache
         # Check that the executable is here.
         ccache := $(strip $(wildcard $(ccache)))
+    else
+        # Detect if the system already has ccache installed to use instead of the prebuilt
+        ccache := $(shell which ccache)
     endif
 endif
 
