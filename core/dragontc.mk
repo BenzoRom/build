@@ -76,7 +76,8 @@ POLLY := -O3 -mllvm -polly \
   -mllvm -polly-run-inliner \
   -mllvm -polly-detect-keep-going \
   -mllvm -polly-opt-simplify-deps=no \
-  -mllvm -polly-rtc-max-arrays-per-group=40
+  -mllvm -polly-rtc-max-arrays-per-group=40 \
+  -fopenmp
 
 # Disable modules that dont work with Polly.
 DISABLE_POLLY_arm :=
@@ -112,5 +113,6 @@ ifeq ($(my_clang),true)
     my_cflags := $(filter-out -Wall -Werror -g -O3 -O2 -Os -O1 -O0 -Og -Oz -Wextra -Weverything,$(my_cflags))
     # Enable -O3 and Polly if not blacklisted, otherwise use -Os.
     my_cflags += $(POLLY) -Qunused-arguments -Wno-unknown-warning-option -w
+    my_link_deps += libomp
   endif
 endif
