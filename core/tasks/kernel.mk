@@ -243,6 +243,9 @@ $(KERNEL_CONFIG): $(KERNEL_DEFCONFIG_SRC) $(KERNEL_ADDITIONAL_CONFIG_OUT)
 			$(call make-kernel-target,KCONFIG_ALLCONFIG=$(KERNEL_OUT)/.config alldefconfig); \
 		fi
 
+.PHONY: $(KERNEL_DEFCONFIG)
+$(KERNEL_DEFCONFIG): $(KERNEL_CONFIG)
+
 $(TARGET_PREBUILT_INT_KERNEL): $(KERNEL_CONFIG)
 	@echo "Building Kernel"
 	$(call make-kernel-target,$(BOARD_KERNEL_IMAGE_NAME))
