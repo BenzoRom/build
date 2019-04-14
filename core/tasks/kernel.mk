@@ -247,6 +247,9 @@ ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
     ifeq ($(KERNEL_CC),)
         KERNEL_CC := CC="$(ccache) clang"
     endif
+    ifneq ($(TARGET_KERNEL_USE_LLD),)
+        KERNEL_CC += LD="$(TARGET_KERNEL_CLANG_PATH)/ld.lld"
+    endif
 else
     KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(ccache) $(KERNEL_TOOLCHAIN_PATH)"
 endif
