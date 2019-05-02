@@ -248,6 +248,11 @@ ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
     ifneq ($(TARGET_KERNEL_USE_LLD),)
         KERNEL_CC += LD="$(TARGET_KERNEL_CLANG_PATH)/ld.lld"
     endif
+    ifeq ($(KERNEL_ARCH),arm64)
+        ifneq ($(TARGET_KERNEL_NO_LLVM-OBJCOPY),true)
+            KERNEL_CC += OBJCOPY="$(TARGET_KERNEL_CLANG_PATH)/llvm-objcopy"
+        endif
+    endif
 else
     KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(ccache) $(KERNEL_TOOLCHAIN_PATH)"
 endif
