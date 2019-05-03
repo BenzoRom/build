@@ -655,6 +655,11 @@ $(call add-clean-step, find $(OUT_DIR) -type f -name "*link_type" -print0 | xarg
 # import_includes and export_includes files are no longer needed
 $(call add-clean-step, find $(OUT_DIR) -type f -name "import_includes" -o -name "export_includes" -print0 | xargs -0 rm -f)
 
+# Clean up old verity tools.
+$(call add-clean-step, rm -rf $(HOST_OUT_JAVA_LIBRARIES)/BootSignature.jar)
+$(call add-clean-step, rm -rf $(HOST_OUT_JAVA_LIBRARIES)/VeritySigner.jar)
+$(call add-clean-step, rm -rf $(HOST_OUT_EXECUTABLES)/build_verity_metadata.py)
+
 # ************************************************
 # NEWER CLEAN STEPS MUST BE AT THE END OF THE LIST
 # ************************************************
