@@ -258,8 +258,11 @@ function setpaths()
     if [ -n "$ANDROID_TOOLCHAIN_2ND_ARCH" ]; then
         ANDROID_BUILD_PATHS=$ANDROID_BUILD_PATHS:$ANDROID_TOOLCHAIN_2ND_ARCH
     fi
-    ANDROID_BUILD_PATHS=$ANDROID_BUILD_PATHS:$ANDROID_DEV_SCRIPTS:
-    export ANDROID_BUILD_PATHS
+    ANDROID_BUILD_PATHS=$ANDROID_BUILD_PATHS:$ANDROID_DEV_SCRIPTS
+
+    # Append llvm binutils prebuilts path to ANDROID_BUILD_PATHS.
+    local ANDROID_LLVM_BINUTILS=$(get_abs_build_var ANDROID_CLANG_PREBUILTS)/llvm-binutils-stable
+    ANDROID_BUILD_PATHS=$ANDROID_BUILD_PATHS:$ANDROID_LLVM_BINUTILS
 
     # If prebuilts/android-emulator/<system>/ exists, prepend it to our PATH
     # to ensure that the corresponding 'emulator' binaries are used.
@@ -275,11 +278,11 @@ function setpaths()
             ;;
     esac
     if [ -n "$ANDROID_EMULATOR_PREBUILTS" -a -d "$ANDROID_EMULATOR_PREBUILTS" ]; then
-        ANDROID_BUILD_PATHS=$ANDROID_BUILD_PATHS$ANDROID_EMULATOR_PREBUILTS:
+        ANDROID_BUILD_PATHS=$ANDROID_BUILD_PATHS:$ANDROID_EMULATOR_PREBUILTS
         export ANDROID_EMULATOR_PREBUILTS
     fi
 
-    export PATH=$ANDROID_BUILD_PATHS$PATH
+    export PATH=$ANDROID_BUILD_PATHS:$PATH
 
     # out with the duplicate old
     if [ -n $ANDROID_PYTHONPATH ]; then
