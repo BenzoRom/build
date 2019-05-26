@@ -67,6 +67,10 @@ endif
 # Polly flags for use with Clang
 POLLY := -O3 -mllvm -polly \
   -mllvm -polly-parallel -lgomp \
+  -mllvm -polly-omp-backend=LLVM \
+  -mllvm -polly-num-threads=4 \
+  -mllvm -polly-scheduling=dynamic \
+  -mllvm -polly-scheduling-chunksize=1 \
   -mllvm -polly-ast-use-context \
   -mllvm -polly-vectorizer=stripmine \
   -mllvm -polly-opt-fusion=max \
