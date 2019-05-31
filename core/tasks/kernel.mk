@@ -249,8 +249,13 @@ ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
         KERNEL_CC += LD="$(TARGET_KERNEL_CLANG_PATH)/ld.lld"
     endif
     ifeq ($(KERNEL_ARCH),arm64)
-        ifneq ($(TARGET_KERNEL_NO_LLVM-OBJCOPY),true)
+        ifneq ($(TARGET_KERNEL_NO_LLVM-BINUTILS),true)
+            KERNEL_CC += AS="$(TARGET_KERNEL_CLANG_PATH)/llvm-as"
+            KERNEL_CC += AR="$(TARGET_KERNEL_CLANG_PATH)/llvm-ar"
+            KERNEL_CC += NM="$(TARGET_KERNEL_CLANG_PATH)/llvm-nm"
             KERNEL_CC += OBJCOPY="$(TARGET_KERNEL_CLANG_PATH)/llvm-objcopy"
+            KERNEL_CC += OBJDUMP="$(TARGET_KERNEL_CLANG_PATH)/llvm-objdump"
+            KERNEL_CC += STRIP="$(TARGET_KERNEL_CLANG_PATH)/llvm-strip"
         endif
     endif
     # Pass kernel ThinLTO cache path
