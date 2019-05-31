@@ -176,6 +176,13 @@ ifeq ($(TARGET_KERNEL_CLANG_COMPILE),true)
     ifneq ($(TARGET_KERNEL_USE_LLD),)
         KERNEL_CC += LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
     endif
+    # Clang binutils
+    KERNEL_CC += AS=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-as
+    KERNEL_CC += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
+    KERNEL_CC += NM=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-nm
+    KERNEL_CC += OBJCOPY=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-objcopy
+    KERNEL_CC += OBJDUMP=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-objdump
+    KERNEL_CC += STRIP=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-strip
 endif
 
 ifneq ($(TARGET_KERNEL_MODULES),)
