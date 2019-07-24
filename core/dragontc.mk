@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017 DragonTC
+# Copyright (C) 2015-2019 DragonTC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,9 +53,6 @@ ifeq ($(my_clang),true)
   ifeq (1,$(words $(filter $(DISABLE_DTC),$(LOCAL_MODULE))))
     my_cc := $(AOSP_CLANG)
     my_cxx := $(AOSP_CLANG_CXX)
-    CLANG_CONFIG_arm_EXTRA_CFLAGS += -mcpu=kryo
-  else
-    CLANG_CONFIG_arm_EXTRA_CFLAGS += -mcpu=kryo
   endif
 endif
 
@@ -68,15 +65,15 @@ endif
 POLLY := -O3 -mllvm -polly \
   -mllvm -polly-parallel -lgomp \
   -mllvm -polly-omp-backend=LLVM \
-  -mllvm -polly-num-threads=4 \
+  -mllvm -polly-num-threads=8 \
   -mllvm -polly-scheduling=dynamic \
   -mllvm -polly-scheduling-chunksize=1 \
   -mllvm -polly-ast-use-context \
-  -mllvm -polly-vectorizer=stripmine \
+  -mllvm -polly-vectorizer=polly \
   -mllvm -polly-opt-fusion=max \
   -mllvm -polly-opt-maximize-bands=yes \
   -mllvm -polly-run-dce \
-  -mllvm -polly-position=after-loopopt \
+  -mllvm -polly-position=early \
   -mllvm -polly-run-inliner \
   -mllvm -polly-detect-keep-going \
   -mllvm -polly-opt-simplify-deps=no \
