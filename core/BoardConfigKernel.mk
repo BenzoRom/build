@@ -113,6 +113,11 @@ else
   KERNEL_MAKE_FLAGS += HOSTCFLAGS="-I/usr/include -I/usr/include/x86_64-linux-gnu -L/usr/lib/x86_64-linux-gnu -L/usr/lib64"
 endif
 
+TOOLS_PATH_OVERRIDE := \
+    PATH=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_OS)-x86/bin:$$PATH \
+    LD_LIBRARY_PATH=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_OS)-x86/lib:$$LD_LIBRARY_PATH \
+    PERL5LIB=$(BUILD_TOP)/prebuilts/build-tools/common/perl-base
+
 # Set use the full path to the make command
 KERNEL_MAKE_CMD := $(BUILD_TOP)/prebuilts/build-tools/$(HOST_OS)-x86/bin/make
 
