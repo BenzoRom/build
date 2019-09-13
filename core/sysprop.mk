@@ -30,6 +30,7 @@ POST_PROCESS_PROPS := $(HOST_OUT_EXECUTABLES)/post_process_props$(HOST_EXECUTABL
 # $(1): Partition name
 # $(2): Output file name
 define generate-common-build-props
+    $(PRODUCT_BUILD_PROP_OVERRIDES) \
     echo "####################################" >> $(2);\
     echo "# from generate-common-build-props" >> $(2);\
     echo "# These properties identify this partition image." >> $(2);\
@@ -247,7 +248,8 @@ endef
 
 gen_from_buildinfo_sh := $(call intermediates-dir-for,PACKAGING,system_build_prop)/buildinfo.prop
 $(gen_from_buildinfo_sh): $(INTERNAL_BUILD_ID_MAKEFILE) $(API_FINGERPRINT) | $(BUILD_DATETIME_FILE) $(BUILD_NUMBER_FILE)
-	$(hide) TARGET_BUILD_TYPE="$(TARGET_BUILD_VARIANT)" \
+	$(hide) $(PRODUCT_BUILD_PROP_OVERRIDES) \
+	        TARGET_BUILD_TYPE="$(TARGET_BUILD_VARIANT)" \
 	        TARGET_BUILD_FLAVOR="$(TARGET_BUILD_FLAVOR)" \
 	        TARGET_DEVICE="$(TARGET_DEVICE)" \
 	        PRODUCT_DEFAULT_LOCALE="$(call get-default-product-locale,$(PRODUCT_LOCALES))" \
