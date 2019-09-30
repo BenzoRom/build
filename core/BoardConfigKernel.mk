@@ -115,6 +115,12 @@ ifeq ($(KERNEL_ARCH),arm64)
   KERNEL_MAKE_FLAGS += CFLAGS_MODULE="-fno-pic"
 endif
 
+ifeq ($(HOST_OS),darwin)
+  KERNEL_MAKE_FLAGS += HOSTCFLAGS="-I$(BUILD_TOP)/external/elfutils/libelf -I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib"
+else
+  KERNEL_MAKE_FLAGS += CPATH="/usr/include:/usr/include/x86_64-linux-gnu" HOSTCFLAGS="-L/usr/lib/x86_64-linux-gnu -L/usr/lib64"
+endif
+
 ifneq ($(TARGET_KERNEL_ADDITIONAL_FLAGS),)
   KERNEL_MAKE_FLAGS += $(TARGET_KERNEL_ADDITIONAL_FLAGS)
 endif
