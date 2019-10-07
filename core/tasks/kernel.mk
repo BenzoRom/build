@@ -64,6 +64,7 @@ VARIANT_DEFCONFIG := $(TARGET_KERNEL_VARIANT_CONFIG)
 SELINUX_DEFCONFIG := $(TARGET_KERNEL_SELINUX_CONFIG)
 
 ## Internal variables
+DTBS_OUT := $(PRODUCT_OUT)/dtbs
 KERNEL_OUT := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ
 KERNEL_CONFIG := $(KERNEL_OUT)/.config
 KERNEL_RELEASE := $(KERNEL_OUT)/include/config/kernel.release
@@ -214,6 +215,12 @@ define make-dtbo-target
 $(call internal-make-kernel-target,$(PRODUCT_OUT)/dtbo,$(1))
 endef
 
+# Make a DTB targets
+# $(1): The DTB target to build (eg. dtbs, defconfig)
+define make-dtb-target
+$(call internal-make-kernel-target,$(DTBS_OUT),$(1))
+endef
+
 $(KERNEL_OUT):
 	mkdir -p $(KERNEL_OUT)
 
@@ -276,13 +283,6 @@ $(BOARD_PREBUILT_DTBOIMAGE):
 	$(call make-dtbo-target,dtbo.img)
 endif # TARGET_NEEDS_DTBOIMAGE
 
-ifeq ($(BOARD_INCLUDE_DTB_IN_BOOTIMG),true)
-ifeq ($(BOARD_PREBUILT_DTBIMAGE_DIR),)
-$(INSTALLED_DTBIMAGE_TARGET): $(INSTALLED_KERNEL_TARGET)
-	cat $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/dts/qcom/*.dtb > $@
-endif # BOARD_PREBUILT_DTBIMAGE_DIR
-endif # BOARD_INCLUDE_DTB_IN_BOOTIMG
-
 endif # FULL_KERNEL_BUILD
 
 ## Install it
@@ -299,16 +299,20 @@ endif
 INSTALLED_DTBOIMAGE_TARGET := $(PRODUCT_OUT)/dtbo.img
 ALL_PREBUILT += $(INSTALLED_DTBOIMAGE_TARGET)
 
-INSTALLED_DTBIMAGE_TARGET := $(PRODUCT_OUT)/dtb.img
-ALL_PREBUILT += $(INSTALLED_DTBIMAGE_TARGET)
-
 .PHONY: kernel
 kernel: $(INSTALLED_KERNEL_TARGET)
 
 .PHONY: dtboimage
 dtboimage: $(INSTALLED_DTBOIMAGE_TARGET)
 
+ifeq ($(BOARD_INCLUDE_DTB_IN_BOOTIMG),true)
+$(INSTALLED_DTBIMAGE_TARGET):
+	echo -e ${CL_GRN}"Building DTBs"${CL_RST}
+	$(call make-dtb-target,$(KERNEL_DEFCONFIG))
+	$(call make-dtb-target,dtbs)
+	cat $(shell find $(DTBS_OUT)/arch/$(KERNEL_ARCH)/boot/dts/** -type f -name "*.dtb" | sort) > $@
 .PHONY: dtbimage
 dtbimage: $(INSTALLED_DTBIMAGE_TARGET)
+endif # BOARD_INCLUDE_DTB_IN_BOOTIMG
 
 endif # TARGET_NO_KERNEL
