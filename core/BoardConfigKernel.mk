@@ -120,10 +120,6 @@ TOOLS_PATH_OVERRIDE := \
     LD_LIBRARY_PATH=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_OS)-x86/lib:$$LD_LIBRARY_PATH \
     PERL5LIB=$(BUILD_TOP)/prebuilts/build-tools/common/perl-base
 
-ifeq ($(BOARD_INCLUDE_DTB_IN_BOOTIMG),true)
-BOARD_PREBUILT_DTBIMAGE_DIR ?= $(PRODUCT_OUT)/dtbs/arch/$(KERNEL_ARCH)/boot/dts/**
-endif
-
 # Set use the full path to the make command
 KERNEL_MAKE_CMD := $(BUILD_TOP)/prebuilts/build-tools/$(HOST_OS)-x86/bin/make
 
