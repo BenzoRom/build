@@ -95,6 +95,10 @@ $(call add_json_list, IntegerOverflowExcludePaths,       $(INTEGER_OVERFLOW_EXCL
 
 $(call add_json_bool, DisableScudo,                      $(filter true,$(PRODUCT_DISABLE_SCUDO)))
 
+$(call add_json_str,  CustomClangVersion,                $(CUSTOM_CLANG_VERSION))
+$(call add_json_str,  CustomClangShortVersion,           $(CUSTOM_CLANG_SHORT_VERSION))
+$(call add_json_str,  PollyFlags,                        $(POLLY_FLAGS))
+
 $(call add_json_bool, ClangTidy,                         $(filter 1 true,$(WITH_TIDY)))
 $(call add_json_str,  TidyChecks,                        $(WITH_TIDY_CHECKS))
 

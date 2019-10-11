@@ -8,6 +8,7 @@
 #######################################
 include $(BUILD_SYSTEM)/base_rules.mk
 include $(BUILD_SYSTEM)/use_lld_setup.mk
+include $(BUILD_SYSTEM)/clang/custom_clang.mk
 #######################################
 
 ##################################################
