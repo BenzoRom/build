@@ -83,11 +83,12 @@ KERNEL_TOOLCHAIN_PATH_gcc := $(KERNEL_TOOLCHAIN_$(KERNEL_ARCH))
 
 ifneq ($(USE_CCACHE),)
     ifeq ($(USE_SYSTEM_CCACHE),)
+        # Use the prebuilt ccache bin
         CCACHE_BIN := $(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin/ccache
-        # Check that the executable is here.
-        CCACHE_BIN := $(strip $(wildcard $(ccache)))
+        # Check that the executable is there
+        CCACHE_BIN := $(strip $(wildcard $(CCACHE_BIN)))
     else
-        # Detect if the system already has ccache installed to use instead of the prebuilt
+        # Use system binary
         CCACHE_BIN := $(shell which ccache)
     endif
 endif
