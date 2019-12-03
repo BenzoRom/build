@@ -645,6 +645,10 @@ $(call add-clean-step, rm -rf $(PRODUCT_OUT)/system_other)
 # Migrate preopt files to system_other for some devices
 $(call add-clean-step, rm -rf $(PRODUCT_OUT)/*/*app/*/oat)
 
+# Remove libcameraservice and libcamera_client from base_system
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/system/lib*/libcameraservice.so)
+$(call add-clean-step, rm -rf $(PRODUCT_OUT)/system/lib*/libcamera_client.so)
+
 # ************************************************
 # NEWER CLEAN STEPS MUST BE AT THE END OF THE LIST
 # ************************************************
