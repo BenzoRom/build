@@ -146,6 +146,13 @@ TOOLS_PATH_OVERRIDE := \
     LD_LIBRARY_PATH=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_OS)-x86/lib:$$LD_LIBRARY_PATH \
     PERL5LIB=$(BUILD_TOP)/prebuilts/build-tools/common/perl-base
 
+# Set DTBO image locations so the build system knows to build them
+ifeq ($(TARGET_NEEDS_DTBOIMAGE),true)
+BOARD_PREBUILT_DTBOIMAGE ?= $(PRODUCT_OUT)/dtbo/arch/$(KERNEL_ARCH)/boot/dtbo.img
+else ifeq ($(BOARD_KERNEL_SEPARATED_DTBO),true)
+BOARD_PREBUILT_DTBOIMAGE ?= $(PRODUCT_OUT)/dtbo-pre.img
+endif
+
 # Set use the full path to the make command
 KERNEL_MAKE_CMD := $(BUILD_TOP)/prebuilts/build-tools/$(HOST_OS)-x86/bin/make
 
