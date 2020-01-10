@@ -17,22 +17,16 @@
 #################
 
 # Polly flags for use with Clang
-POLLY := -O3 -mllvm -polly \
+POLLY := -O3 \
+  -mllvm -polly \
   -mllvm -polly-parallel -lgomp \
   -mllvm -polly-omp-backend=LLVM \
-  -mllvm -polly-num-threads=0 \
-  -mllvm -polly-scheduling=dynamic \
-  -mllvm -polly-scheduling-chunksize=1 \
-  -mllvm -polly-ast-use-context \
-  -mllvm -polly-vectorizer=polly \
   -mllvm -polly-opt-fusion=max \
-  -mllvm -polly-opt-maximize-bands=yes \
-  -mllvm -polly-run-dce \
-  -mllvm -polly-position=before-vectorizer \
-  -mllvm -polly-run-inliner \
-  -mllvm -polly-detect-keep-going \
   -mllvm -polly-opt-simplify-deps=no \
-  -mllvm -polly-rtc-max-arrays-per-group=40 \
+  -mllvm -polly-position=before-vectorizer \
+  -mllvm -polly-run-dce \
+  -mllvm -polly-run-inliner \
+  -mllvm -polly-vectorizer=stripmine \
   -fopenmp
 
 ifeq ($(my_clang),true)
