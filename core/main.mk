@@ -252,7 +252,7 @@ endif
 
 # Enable core platform API violation warnings on userdebug and eng builds.
 ifneq ($(TARGET_BUILD_VARIANT),user)
-ADDITIONAL_BUILD_PROPERTIES += persist.debug.dalvik.vm.core_platform_api_policy=just-warn
+ADDITIONAL_BUILD_PROPERTIES += persist.debug.dalvik.vm.core_platform_api_policy=disabled
 endif
 
 # Sets the default value of ro.postinstall.fstab.prefix to /system.
