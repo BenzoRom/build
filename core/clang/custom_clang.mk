@@ -23,7 +23,7 @@ POLLY := -O3 \
   -mllvm -polly-omp-backend=LLVM \
   -mllvm -polly-opt-fusion=max \
   -mllvm -polly-opt-simplify-deps=no \
-  -mllvm -polly-position=before-vectorizer \
+  -mllvm -polly-position=after-loopopt \
   -mllvm -polly-run-dce \
   -mllvm -polly-run-inliner \
   -mllvm -polly-vectorizer=stripmine \
