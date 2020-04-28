@@ -82,14 +82,14 @@ endif
 KERNEL_TOOLCHAIN_PATH_gcc := $(KERNEL_TOOLCHAIN_$(KERNEL_ARCH))
 
 ifneq ($(USE_CCACHE),)
-    ifeq ($(USE_SYSTEM_CCACHE),)
+    ifneq ($(CCACHE_EXEC),)
+        # Use passed ccache binary
+        CCACHE_BIN := $(CCACHE_EXEC)
+    else
         # Use the prebuilt ccache bin
         CCACHE_BIN := $(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin/ccache
         # Check that the executable is there
         CCACHE_BIN := $(strip $(wildcard $(CCACHE_BIN)))
-    else
-        # Use system binary
-        CCACHE_BIN := $(shell which ccache)
     endif
 endif
 
