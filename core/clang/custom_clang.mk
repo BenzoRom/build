@@ -30,12 +30,10 @@ POLLY := -O3 \
   -fopenmp
 
 ifeq ($(my_clang),true)
-  ifndef LOCAL_IS_HOST_MODULE
-    # Possible conflicting flags will be filtered out to reduce argument
-    # size and to prevent issues with locally set optimizations.
-    my_cflags := $(filter-out -Wall -Werror -g -O3 -O2 -Os -O1 -O0 -Og -Oz -Wextra -Weverything,$(my_cflags))
-    # Enable -O3 and Polly if not blacklisted, otherwise use -Os.
-    my_cflags += $(POLLY) -Qunused-arguments -Wno-unknown-warning-option -w
-    my_link_deps += libomp
-  endif
+  # Possible conflicting flags will be filtered out to reduce argument
+  # size and to prevent issues with locally set optimizations.
+  my_cflags := $(filter-out -Wall -Werror -g -O3 -O2 -Os -O1 -O0 -Og -Oz -Wextra -Weverything,$(my_cflags))
+  # Enable -O3 and Polly if not blacklisted, otherwise use -Os.
+  my_cflags += $(POLLY) -Qunused-arguments -Wno-unknown-warning-option -w
+  my_link_deps += libomp
 endif
