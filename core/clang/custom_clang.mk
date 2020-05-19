@@ -29,7 +29,7 @@ POLLY := -O3 \
   -mllvm -polly-scheduling=dynamic \
   -mllvm -polly-scheduling-chunksize=4 \
   -mllvm -polly-vectorizer=stripmine \
-  -fopenmp
+  -fopenmp -fopenmp-version=50
 
 ifeq ($(my_clang),true)
   # Possible conflicting flags will be filtered out to reduce argument
