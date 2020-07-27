@@ -177,12 +177,13 @@ ifeq ($(TARGET_KERNEL_CLANG_COMPILE),true)
         KERNEL_CC += LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
     endif
     ifneq ($(TARGET_KERNEL_NO_LLVM_BINUTILS),true)
-        KERNEL_CC += AS=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-as
-        KERNEL_CC += AR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
-        KERNEL_CC += NM=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-nm
-        KERNEL_CC += OBJCOPY=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-objcopy
-        KERNEL_CC += OBJDUMP=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-objdump
-        KERNEL_CC += STRIP=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-strip
+        LLVM_BINUTILS_PATH := $(BUILD_TOP)/prebuilts/clang/host/$(HOST_OS)-x86/llvm-binutils-stable
+        KERNEL_CC += AS=$(LLVM_BINUTILS_PATH)/llvm-as
+        KERNEL_CC += AR=$(LLVM_BINUTILS_PATH)/llvm-ar
+        KERNEL_CC += NM=$(LLVM_BINUTILS_PATH)/llvm-nm
+        KERNEL_CC += OBJCOPY=$(LLVM_BINUTILS_PATH)/llvm-objcopy
+        KERNEL_CC += OBJDUMP=$(LLVM_BINUTILS_PATH)/llvm-objdump
+        KERNEL_CC += STRIP=$(LLVM_BINUTILS_PATH)/llvm-strip
     endif
     # ThinLTO cache path for kernel
     KERNEL_CC += KERNEL_THINLTO_CACHE_PATH="$(BUILD_TOP)/$(TARGET_OUT_INTERMEDIATES)/KERNEL_THINLTO-CACHE"
