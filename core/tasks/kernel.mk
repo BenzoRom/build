@@ -50,7 +50,9 @@
 #                                                      x86_64-linux-gnu- for x86
 #
 #   NEED_KERNEL_MODULE_ROOT            = Optional, if true, install kernel
-#                                          modules in root instead of system
+#                                          modules in root instead of vendor
+#   NEED_KERNEL_MODULE_VENDOR_OVERLAY  = Optional, if true, install kernel
+#                                          modules in vendor_overlay instead of vendor
 
 ifneq ($(TARGET_NO_KERNEL),true)
 
@@ -148,6 +150,11 @@ ifeq ($(NEED_KERNEL_MODULE_ROOT),true)
 KERNEL_MODULES_OUT := $(TARGET_ROOT_OUT)
 KERNEL_DEPMOD_STAGING_DIR := $(KERNEL_BUILD_OUT_PREFIX)$(call intermediates-dir-for,PACKAGING,depmod_recovery)
 KERNEL_MODULE_MOUNTPOINT :=
+else ifeq ($(NEED_KERNEL_MODULE_VENDOR_OVERLAY),true)
+KERNEL_MODULES_OUT := $(TARGET_OUT_PRODUCT)/vendor_overlay/$(PRODUCT_TARGET_VNDK_VERSION)
+KERNEL_DEPMOD_STAGING_DIR := $(KERNEL_BUILD_OUT_PREFIX)$(call intermediates-dir-for,PACKAGING,depmod_product)
+KERNEL_MODULE_MOUNTPOINT := vendor
+$(INSTALLED_PRODUCTIMAGE_TARGET): $(TARGET_PREBUILT_INT_KERNEL)
 else
 KERNEL_MODULES_OUT := $(TARGET_OUT_VENDOR)
 KERNEL_DEPMOD_STAGING_DIR := $(KERNEL_BUILD_OUT_PREFIX)$(call intermediates-dir-for,PACKAGING,depmod_vendor)
