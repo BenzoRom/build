@@ -217,6 +217,9 @@ ifeq ($(PRODUCT_DISABLE_SCUDO),true)
   my_sanitize := $(filter-out scudo,$(my_sanitize))
 endif
 
+# Disable integer for latest clang and minimal runtime
+my_sanitize := $(filter-out integer,$(my_sanitize))
+
 # Undefined symbols can occur if a non-sanitized library links
 # sanitized static libraries. That's OK, because the executable
 # always depends on the ASan runtime library, which defines these
