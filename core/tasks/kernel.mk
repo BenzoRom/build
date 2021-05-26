@@ -29,10 +29,6 @@
 #
 #   TARGET_KERNEL_CLANG_COMPILE        = Compile kernel with clang, defaults to false
 #
-#   TARGET_KERNEL_CLANG_VERSION        = Clang prebuilts version, optional, defaults to clang-stable
-#
-#   TARGET_KERNEL_CLANG_PATH           = Clang prebuilts path, optional
-#
 #   BOARD_KERNEL_IMAGE_NAME            = Built image name
 #                                          for ARM use: zImage
 #                                          for ARM64 use: Image.gz
@@ -44,11 +40,6 @@
 #
 #   KERNEL_CC                          = The C Compiler used. This is automatically set based
 #                                          on whether the clang version is set, optional.
-#
-#   KERNEL_CLANG_TRIPLE                = Target triple for clang (e.g. aarch64-linux-gnu-)
-#                                          defaults to arm-linux-gnu- for arm
-#                                                      aarch64-linux-gnu- for arm64
-#                                                      x86_64-linux-gnu- for x86
 #
 #   NEED_KERNEL_MODULE_ROOT            = Optional, if true, install kernel
 #                                          modules in root instead of vendor
@@ -170,25 +161,17 @@ $(INTERNAL_VENDOR_RAMDISK_TARGET): $(TARGET_PREBUILT_INT_KERNEL)
 # Add host bin out dir to path
 PATH_OVERRIDE := PATH=$(KERNEL_BUILD_OUT_PREFIX)$(HOST_OUT_EXECUTABLES):$$PATH
 ifeq ($(TARGET_KERNEL_CLANG_COMPILE),true)
-    ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
-        # Find the clang-* directory containing the specified version
-        KERNEL_CLANG_VERSION := $(TARGET_KERNEL_CLANG_VERSION)
+  # Setup clang for PATH
+  PATH_OVERRIDE += PATH=$(TARGET_KERNEL_CLANG_PATH)/bin:$$PATH LD_LIBRARY_PATH=$(TARGET_KERNEL_CLANG_PATH)/lib64:$$LD_LIBRARY_PATH
+
+  # Setup ccache if needed and/or CC= if LLVM=1 isn't enabled
+  ifeq ($(KERNEL_CC),)
+    ifneq ($(CCACHE_BIN),)
+      KERNEL_CC := CC="$(CCACHE_BIN) clang"
     else
-        # Use the default version of clang if TARGET_KERNEL_CLANG_VERSION hasn't been set by the device config
-        KERNEL_CLANG_VERSION := $(LLVM_PREBUILTS_VERSION)
+      KERNEL_CC := CC=clang
     endif
-    TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/$(KERNEL_CLANG_VERSION)
-    ifeq ($(KERNEL_ARCH),arm64)
-        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=aarch64-linux-gnu-
-    else ifeq ($(KERNEL_ARCH),arm)
-        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=arm-linux-gnu-
-    else ifeq ($(KERNEL_ARCH),x86)
-        KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=x86_64-linux-gnu-
-    endif
-    PATH_OVERRIDE += PATH=$(TARGET_KERNEL_CLANG_PATH)/bin:$$PATH LD_LIBRARY_PATH=$(TARGET_KERNEL_CLANG_PATH)/lib64:$$LD_LIBRARY_PATH
-    ifeq ($(KERNEL_CC),)
-        KERNEL_CC := CC="$(CCACHE_BIN) clang"
-    endif
+  endif
 endif
 
 ifneq ($(TARGET_KERNEL_MODULES),)
@@ -206,7 +189,7 @@ KERNEL_ADDITIONAL_CONFIG_OUT := $(KERNEL_OUT)/.additional_config
 # $(1): output path (The value passed to O=)
 # $(2): target to build (eg. defconfig, modules, dtbo.img)
 define internal-make-kernel-target
-$(PATH_OVERRIDE) $(KERNEL_MAKE_CMD) $(KERNEL_MAKE_FLAGS) -C $(KERNEL_SRC) O=$(KERNEL_BUILD_OUT_PREFIX)$(1) ARCH=$(KERNEL_ARCH) $(KERNEL_CROSS_COMPILE) $(KERNEL_CLANG_TRIPLE) $(KERNEL_CC) $(2)
+$(PATH_OVERRIDE) $(KERNEL_MAKE_CMD) $(KERNEL_MAKE_FLAGS) -C $(KERNEL_SRC) O=$(KERNEL_BUILD_OUT_PREFIX)$(1) ARCH=$(KERNEL_ARCH) $(KERNEL_CROSS_COMPILE) $(KERNEL_CC) $(2)
 endef
 
 # Make a kernel target
