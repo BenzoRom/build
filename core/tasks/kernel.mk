@@ -67,93 +67,93 @@ KERNEL_RELEASE := $(KERNEL_OUT)/include/config/kernel.release
 KERNEL_LD :=
 
 ifeq ($(KERNEL_ARCH),x86_64)
-KERNEL_DEFCONFIG_ARCH := x86
+  KERNEL_DEFCONFIG_ARCH := x86
 else
-KERNEL_DEFCONFIG_ARCH := $(KERNEL_ARCH)
+  KERNEL_DEFCONFIG_ARCH := $(KERNEL_ARCH)
 endif
 KERNEL_DEFCONFIG_DIR := $(KERNEL_SRC)/arch/$(KERNEL_DEFCONFIG_ARCH)/configs
 KERNEL_DEFCONFIG_SRC := $(KERNEL_DEFCONFIG_DIR)/$(KERNEL_DEFCONFIG)
 
 ifneq ($(TARGET_KERNEL_ADDITIONAL_CONFIG),)
-KERNEL_ADDITIONAL_CONFIG := $(TARGET_KERNEL_ADDITIONAL_CONFIG)
-KERNEL_ADDITIONAL_CONFIG_SRC := $(KERNEL_DEFCONFIG_DIR)/$(KERNEL_ADDITIONAL_CONFIG)
-    ifeq ("$(wildcard $(KERNEL_ADDITIONAL_CONFIG_SRC))","")
-        $(warning TARGET_KERNEL_ADDITIONAL_CONFIG '$(TARGET_KERNEL_ADDITIONAL_CONFIG)' doesn't exist)
-        KERNEL_ADDITIONAL_CONFIG_SRC := /dev/null
-    endif
-else
+  KERNEL_ADDITIONAL_CONFIG := $(TARGET_KERNEL_ADDITIONAL_CONFIG)
+  KERNEL_ADDITIONAL_CONFIG_SRC := $(KERNEL_DEFCONFIG_DIR)/$(KERNEL_ADDITIONAL_CONFIG)
+  ifeq ("$(wildcard $(KERNEL_ADDITIONAL_CONFIG_SRC))","")
+    $(warning TARGET_KERNEL_ADDITIONAL_CONFIG '$(TARGET_KERNEL_ADDITIONAL_CONFIG)' doesn't exist)
     KERNEL_ADDITIONAL_CONFIG_SRC := /dev/null
+  endif
+else
+  KERNEL_ADDITIONAL_CONFIG_SRC := /dev/null
 endif
 
 ifeq ($(TARGET_PREBUILT_KERNEL),)
-    ifeq ($(BOARD_KERNEL_IMAGE_NAME),)
-        $(error BOARD_KERNEL_IMAGE_NAME not defined.)
-    endif
+  ifeq ($(BOARD_KERNEL_IMAGE_NAME),)
+    $(error BOARD_KERNEL_IMAGE_NAME not defined.)
+  endif
 endif
 TARGET_PREBUILT_INT_KERNEL := $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(BOARD_KERNEL_IMAGE_NAME)
 
 ifeq "$(wildcard $(KERNEL_SRC) )" ""
-    ifneq ($(TARGET_PREBUILT_KERNEL),)
-        HAS_PREBUILT_KERNEL := true
-        NEEDS_KERNEL_COPY := true
-    else
-        $(foreach cf,$(PRODUCT_COPY_FILES), \
-            $(eval _src := $(call word-colon,1,$(cf))) \
-            $(eval _dest := $(call word-colon,2,$(cf))) \
-            $(ifeq kernel,$(_dest), \
-                $(eval HAS_PREBUILT_KERNEL := true)))
-    endif
-
-    ifneq ($(HAS_PREBUILT_KERNEL),)
-        FULL_KERNEL_BUILD := false
-        KERNEL_BIN := $(TARGET_PREBUILT_KERNEL)
-    else
-        $(warning ***************************************************************)
-        $(warning *                                                             *)
-        $(warning * No kernel source found, and no fallback prebuilt defined.   *)
-        $(warning * Please make sure your device is properly configured to      *)
-        $(warning * download the kernel repository to $(KERNEL_SRC))
-        $(warning * and add the TARGET_KERNEL_CONFIG variable to BoardConfig.mk *)
-        $(warning *                                                             *)
-        $(warning * As an alternative, define the TARGET_PREBUILT_KERNEL        *)
-        $(warning * variable with the path to the prebuilt binary kernel image  *)
-        $(warning * in your BoardConfig.mk file                                 *)
-        $(warning *                                                             *)
-        $(warning ***************************************************************)
-        $(error "NO KERNEL")
-    endif
-else
+  ifneq ($(TARGET_PREBUILT_KERNEL),)
+    HAS_PREBUILT_KERNEL := true
     NEEDS_KERNEL_COPY := true
-    ifeq ($(TARGET_KERNEL_CONFIG),)
-        $(warning **********************************************************)
-        $(warning * Kernel source found, but no configuration was defined  *)
-        $(warning * Please add the TARGET_KERNEL_CONFIG variable to your   *)
-        $(warning * BoardConfig.mk file                                    *)
-        $(warning **********************************************************)
-        # $(error "NO KERNEL CONFIG")
-    else
-        #$(info Kernel source found, building it)
-        FULL_KERNEL_BUILD := true
-        KERNEL_BIN := $(TARGET_PREBUILT_INT_KERNEL)
-    endif
+  else
+    $(foreach cf,$(PRODUCT_COPY_FILES), \
+    $(eval _src := $(call word-colon,1,$(cf))) \
+    $(eval _dest := $(call word-colon,2,$(cf))) \
+    $(ifeq kernel,$(_dest), \
+        $(eval HAS_PREBUILT_KERNEL := true)))
+  endif
+
+  ifneq ($(HAS_PREBUILT_KERNEL),)
+    FULL_KERNEL_BUILD := false
+    KERNEL_BIN := $(TARGET_PREBUILT_KERNEL)
+  else
+    $(warning ***************************************************************)
+    $(warning *                                                             *)
+    $(warning * No kernel source found, and no fallback prebuilt defined.   *)
+    $(warning * Please make sure your device is properly configured to      *)
+    $(warning * download the kernel repository to $(KERNEL_SRC))
+    $(warning * and add the TARGET_KERNEL_CONFIG variable to BoardConfig.mk *)
+    $(warning *                                                             *)
+    $(warning * As an alternative, define the TARGET_PREBUILT_KERNEL        *)
+    $(warning * variable with the path to the prebuilt binary kernel image  *)
+    $(warning * in your BoardConfig.mk file                                 *)
+    $(warning *                                                             *)
+    $(warning ***************************************************************)
+    $(error "NO KERNEL")
+  endif
+else
+  NEEDS_KERNEL_COPY := true
+  ifeq ($(TARGET_KERNEL_CONFIG),)
+    $(warning **********************************************************)
+    $(warning * Kernel source found, but no configuration was defined  *)
+    $(warning * Please add the TARGET_KERNEL_CONFIG variable to your   *)
+    $(warning * BoardConfig.mk file                                    *)
+    $(warning **********************************************************)
+    # $(error "NO KERNEL CONFIG")
+  else
+    #$(info Kernel source found, building it)
+    FULL_KERNEL_BUILD := true
+    KERNEL_BIN := $(TARGET_PREBUILT_INT_KERNEL)
+  endif
 endif
 
 ifeq ($(FULL_KERNEL_BUILD),true)
 
 ifeq ($(NEED_KERNEL_MODULE_ROOT),true)
-KERNEL_MODULES_OUT := $(TARGET_ROOT_OUT)
-KERNEL_DEPMOD_STAGING_DIR := $(KERNEL_BUILD_OUT_PREFIX)$(call intermediates-dir-for,PACKAGING,depmod_recovery)
-KERNEL_MODULE_MOUNTPOINT :=
+  KERNEL_MODULES_OUT := $(TARGET_ROOT_OUT)
+  KERNEL_DEPMOD_STAGING_DIR := $(KERNEL_BUILD_OUT_PREFIX)$(call intermediates-dir-for,PACKAGING,depmod_recovery)
+  KERNEL_MODULE_MOUNTPOINT :=
 else ifeq ($(NEED_KERNEL_MODULE_VENDOR_OVERLAY),true)
-KERNEL_MODULES_OUT := $(TARGET_OUT_PRODUCT)/vendor_overlay/$(PRODUCT_TARGET_VNDK_VERSION)
-KERNEL_DEPMOD_STAGING_DIR := $(KERNEL_BUILD_OUT_PREFIX)$(call intermediates-dir-for,PACKAGING,depmod_product)
-KERNEL_MODULE_MOUNTPOINT := vendor
-$(INSTALLED_PRODUCTIMAGE_TARGET): $(TARGET_PREBUILT_INT_KERNEL)
+  KERNEL_MODULES_OUT := $(TARGET_OUT_PRODUCT)/vendor_overlay/$(PRODUCT_TARGET_VNDK_VERSION)
+  KERNEL_DEPMOD_STAGING_DIR := $(KERNEL_BUILD_OUT_PREFIX)$(call intermediates-dir-for,PACKAGING,depmod_product)
+  KERNEL_MODULE_MOUNTPOINT := vendor
+  $(INSTALLED_PRODUCTIMAGE_TARGET): $(TARGET_PREBUILT_INT_KERNEL)
 else
-KERNEL_MODULES_OUT := $(TARGET_OUT_VENDOR)
-KERNEL_DEPMOD_STAGING_DIR := $(KERNEL_BUILD_OUT_PREFIX)$(call intermediates-dir-for,PACKAGING,depmod_vendor)
-KERNEL_MODULE_MOUNTPOINT := vendor
-$(INSTALLED_VENDORIMAGE_TARGET): $(TARGET_PREBUILT_INT_KERNEL)
+  KERNEL_MODULES_OUT := $(TARGET_OUT_VENDOR)
+  KERNEL_DEPMOD_STAGING_DIR := $(KERNEL_BUILD_OUT_PREFIX)$(call intermediates-dir-for,PACKAGING,depmod_vendor)
+  KERNEL_MODULE_MOUNTPOINT := vendor
+  $(INSTALLED_VENDORIMAGE_TARGET): $(TARGET_PREBUILT_INT_KERNEL)
 endif
 MODULES_INTERMEDIATES := $(KERNEL_BUILD_OUT_PREFIX)$(call intermediates-dir-for,PACKAGING,kernel_modules)
 
@@ -163,27 +163,27 @@ $(INTERNAL_VENDOR_RAMDISK_TARGET): $(TARGET_PREBUILT_INT_KERNEL)
 # Add host bin out dir to path
 PATH_OVERRIDE := PATH=$(KERNEL_BUILD_OUT_PREFIX)$(HOST_OUT_EXECUTABLES):$$PATH
 ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-    # Setup clang for PATH
-    PATH_OVERRIDE += PATH=$(TARGET_KERNEL_CLANG_PATH)/bin:$$PATH LD_LIBRARY_PATH=$(TARGET_KERNEL_CLANG_PATH)/lib64:$$LD_LIBRARY_PATH
-    ifeq ($(KERNEL_CC),)
-        # Setup ccache if needed and/or CC= if LLVM=1 isn't enabled
-        ifneq ($(CCACHE_BIN),)
-            KERNEL_CC := CC="$(CCACHE_BIN) clang"
-        else ifneq ($(TARGET_KERNEL_USE_LLVM_1),true)
-            KERNEL_CC := CC=clang
-        endif
+  # Setup clang for PATH
+  PATH_OVERRIDE += PATH=$(TARGET_KERNEL_CLANG_PATH)/bin:$$PATH LD_LIBRARY_PATH=$(TARGET_KERNEL_CLANG_PATH)/lib64:$$LD_LIBRARY_PATH
+  # Setup ccache if needed and/or CC= if LLVM=1 isn't enabled
+  ifeq ($(KERNEL_CC),)
+    ifneq ($(CCACHE_BIN),)
+      KERNEL_CC := CC="$(CCACHE_BIN) clang"
+    else ifneq ($(TARGET_KERNEL_USE_LLVM_1),true)
+      KERNEL_CC := CC=clang
     endif
-    # Setup lld if LLVM=1 isn't enabled
-    ifneq ($(TARGET_KERNEL_USE_LLVM_1),true)
-        KERNEL_LD += LD=ld.lld
-    endif
+  endif
+  # Setup lld if LLVM=1 isn't enabled
+  ifneq ($(TARGET_KERNEL_USE_LLVM_1),true)
+    KERNEL_LD += LD=ld.lld
+  endif
 
-    # ThinLTO cache path for kernel
-    KERNEL_CC += KERNEL_THINLTO_CACHE_PATH="$(BUILD_TOP)/$(TARGET_OUT_INTERMEDIATES)/KERNEL_THINLTO-CACHE"
+  # ThinLTO cache path for kernel
+  KERNEL_CC += KERNEL_THINLTO_CACHE_PATH="$(BUILD_TOP)/$(TARGET_OUT_INTERMEDIATES)/KERNEL_THINLTO-CACHE"
 endif
 
 ifneq ($(TARGET_KERNEL_MODULES),)
-    $(error TARGET_KERNEL_MODULES is no longer supported!)
+  $(error TARGET_KERNEL_MODULES is no longer supported!)
 endif
 
 PATH_OVERRIDE += PATH=$(KERNEL_TOOLCHAIN_PATH_gcc)/bin:$$PATH
@@ -197,25 +197,25 @@ KERNEL_ADDITIONAL_CONFIG_OUT := $(KERNEL_OUT)/.additional_config
 # $(1): output path (The value passed to O=)
 # $(2): target to build (eg. defconfig, modules, dtbo.img)
 define internal-make-kernel-target
-$(PATH_OVERRIDE) $(KERNEL_MAKE_CMD) $(KERNEL_MAKE_FLAGS) -C $(KERNEL_SRC) O=$(KERNEL_BUILD_OUT_PREFIX)$(1) ARCH=$(KERNEL_ARCH) $(KERNEL_CROSS_COMPILE) $(KERNEL_CC) $(KERNEL_LD) $(2)
+  $(PATH_OVERRIDE) $(KERNEL_MAKE_CMD) $(KERNEL_MAKE_FLAGS) -C $(KERNEL_SRC) O=$(KERNEL_BUILD_OUT_PREFIX)$(1) ARCH=$(KERNEL_ARCH) $(KERNEL_CROSS_COMPILE) $(KERNEL_CC) $(KERNEL_LD) $(2)
 endef
 
 # Make a kernel target
 # $(1): The kernel target to build (eg. defconfig, modules, modules_install)
 define make-kernel-target
-$(call internal-make-kernel-target,$(KERNEL_OUT),$(1))
+  $(call internal-make-kernel-target,$(KERNEL_OUT),$(1))
 endef
 
 # Make a DTBO target
 # $(1): The DTBO target to build (eg. dtbo.img, defconfig)
 define make-dtbo-target
-$(call internal-make-kernel-target,$(DTBO_OUT),$(1))
+  $(call internal-make-kernel-target,$(DTBO_OUT),$(1))
 endef
 
 # Make a DTB targets
 # $(1): The DTB target to build (eg. dtbs, defconfig)
 define make-dtb-target
-$(call internal-make-kernel-target,$(DTB_OUT),$(1))
+  $(call internal-make-kernel-target,$(DTB_OUT),$(1))
 endef
 
 # $(1): modules list
@@ -225,19 +225,19 @@ endef
 # $(5): module load list
 # Depmod requires a well-formed kernel version so 0.0 is used as a placeholder.
 define build-image-kernel-modules-benzo
-    mkdir -p $(2)/lib/modules
-    cp $(1) $(2)/lib/modules/
-    rm -rf $(4)
-    mkdir -p $(4)/lib/modules/0.0/$(3)lib/modules
-    cp $(1) $(4)/lib/modules/0.0/$(3)lib/modules
-    $(DEPMOD) -b $(4) 0.0
-    sed -e 's/\(.*modules.*\):/\/\1:/g' -e 's/ \([^ ]*modules[^ ]*\)/ \/\1/g' $(4)/lib/modules/0.0/modules.dep > $(2)/lib/modules/modules.dep
-    cp $(4)/lib/modules/0.0/modules.softdep $(2)/lib/modules
-    cp $(4)/lib/modules/0.0/modules.alias $(2)/lib/modules
-    rm -f $(2)/lib/modules/modules.load
-    for MODULE in $(5); do \
-        basename $$MODULE >> $(2)/lib/modules/modules.load; \
-    done
+  mkdir -p $(2)/lib/modules
+  cp $(1) $(2)/lib/modules/
+  rm -rf $(4)
+  mkdir -p $(4)/lib/modules/0.0/$(3)lib/modules
+  cp $(1) $(4)/lib/modules/0.0/$(3)lib/modules
+  $(DEPMOD) -b $(4) 0.0
+  sed -e 's/\(.*modules.*\):/\/\1:/g' -e 's/ \([^ ]*modules[^ ]*\)/ \/\1/g' $(4)/lib/modules/0.0/modules.dep > $(2)/lib/modules/modules.dep
+  cp $(4)/lib/modules/0.0/modules.softdep $(2)/lib/modules
+  cp $(4)/lib/modules/0.0/modules.alias $(2)/lib/modules
+  rm -f $(2)/lib/modules/modules.load
+  for MODULE in $(5); do \
+      basename $$MODULE >> $(2)/lib/modules/modules.load; \
+  done
 endef
 
 $(KERNEL_OUT):

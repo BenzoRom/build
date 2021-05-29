@@ -56,74 +56,82 @@ BUILD_TOP := $(shell pwd)
 TARGET_AUTO_KDIR := $(shell echo $(TARGET_DEVICE_DIR) | sed -e 's/^device/kernel/g')
 TARGET_KERNEL_SOURCE ?= $(TARGET_AUTO_KDIR)
 ifneq ($(TARGET_PREBUILT_KERNEL),)
-TARGET_KERNEL_SOURCE :=
+  TARGET_KERNEL_SOURCE :=
 endif
 
 TARGET_KERNEL_ARCH := $(strip $(TARGET_KERNEL_ARCH))
 ifeq ($(TARGET_KERNEL_ARCH),)
-KERNEL_ARCH := $(TARGET_ARCH)
+  KERNEL_ARCH := $(TARGET_ARCH)
 else
-KERNEL_ARCH := $(TARGET_KERNEL_ARCH)
+  KERNEL_ARCH := $(TARGET_KERNEL_ARCH)
 endif
 
 # Clang toolchain
 ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-    ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
-        KERNEL_CLANG_VERSION := $(TARGET_KERNEL_CLANG_VERSION)
-    else
-        # Use the default version of clang if TARGET_KERNEL_CLANG_VERSION
-        # hasn't been set by the device's BoardConfig
-        KERNEL_CLANG_VERSION := $(LLVM_PREBUILTS_VERSION)
+  ifneq ($(TARGET_KERNEL_CLANG_VERSION),)
+    KERNEL_CLANG_VERSION := $(TARGET_KERNEL_CLANG_VERSION)
+  else
+    # Use the default version of clang if TARGET_KERNEL_CLANG_VERSION
+    # hasn't been set by the device's BoardConfig
+    KERNEL_CLANG_VERSION := $(LLVM_PREBUILTS_VERSION)
   endif
   TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/$(KERNEL_CLANG_VERSION)
   CLANG_PREBUILTS := $(TARGET_KERNEL_CLANG_PATH)/bin
 endif
 
+# GCC toolchain path
 GCC_PREBUILTS := $(BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)
-# arm64 toolchain
+
+# arm64 GCC toolchain
 KERNEL_TOOLCHAIN_arm64 := $(GCC_PREBUILTS)/aarch64/aarch64-linux-android-4.9/bin
 KERNEL_TOOLCHAIN_PREFIX_arm64 := aarch64-linux-android-
-# arm toolchain
+
+# arm GCC toolchain
 KERNEL_TOOLCHAIN_arm := $(GCC_PREBUILTS)/arm/arm-linux-androideabi-4.9/bin
 KERNEL_TOOLCHAIN_PREFIX_arm := arm-linux-androidkernel-
-# x86 toolchain
+
+# x86 GCC toolchain
 KERNEL_TOOLCHAIN_x86 := $(GCC_PREBUILTS)/x86/x86_64-linux-android-4.9/bin
 KERNEL_TOOLCHAIN_PREFIX_x86 := x86_64-linux-android-
 
+# Toolchain prefix (Ex: aarch64-linux-android-)
 TARGET_KERNEL_CROSS_COMPILE_PREFIX := $(strip $(TARGET_KERNEL_CROSS_COMPILE_PREFIX))
 ifneq ($(TARGET_KERNEL_CROSS_COMPILE_PREFIX),)
-KERNEL_TOOLCHAIN_PREFIX ?= $(TARGET_KERNEL_CROSS_COMPILE_PREFIX)
+  KERNEL_TOOLCHAIN_PREFIX ?= $(TARGET_KERNEL_CROSS_COMPILE_PREFIX)
 else
-KERNEL_TOOLCHAIN ?= $(KERNEL_TOOLCHAIN_$(KERNEL_ARCH))
-KERNEL_TOOLCHAIN_PREFIX ?= $(KERNEL_TOOLCHAIN_PREFIX_$(KERNEL_ARCH))
+  KERNEL_TOOLCHAIN ?= $(KERNEL_TOOLCHAIN_$(KERNEL_ARCH))
+  KERNEL_TOOLCHAIN_PREFIX ?= $(KERNEL_TOOLCHAIN_PREFIX_$(KERNEL_ARCH))
 endif
 
+# Toolchain to use if passed
 ifeq ($(KERNEL_TOOLCHAIN),)
-KERNEL_TOOLCHAIN_PATH := $(KERNEL_TOOLCHAIN_PREFIX)
+  KERNEL_TOOLCHAIN_PATH := $(KERNEL_TOOLCHAIN_PREFIX)
 else
-KERNEL_TOOLCHAIN_PATH := $(KERNEL_TOOLCHAIN)/$(KERNEL_TOOLCHAIN_PREFIX)
+  KERNEL_TOOLCHAIN_PATH := $(KERNEL_TOOLCHAIN)/$(KERNEL_TOOLCHAIN_PREFIX)
 endif
 
-# We need to add GCC toolchain to the path no matter what
-# for tools like `as`
+# We need to add GCC toolchain to the path no matter what for tools like `as`
 KERNEL_TOOLCHAIN_PATH_gcc := $(KERNEL_TOOLCHAIN_$(KERNEL_ARCH))/$(KERNEL_TOOLCHAIN_PREFIX_$(KERNEL_ARCH))
 
+# Setup ccache
 ifneq ($(USE_CCACHE),)
-    ifneq ($(CCACHE_EXEC),)
-        CCACHE_BIN := $(CCACHE_EXEC)
-    endif
+  ifneq ($(CCACHE_EXEC),)
+    CCACHE_BIN := $(CCACHE_EXEC)
+  endif
 endif
 
+# Cross-compile toolchain (GCC used as secondary if Clang is used)
 ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-    KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
+  KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
 else
-    KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(CCACHE_BIN) $(KERNEL_TOOLCHAIN_PATH)"
+  KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(CCACHE_BIN) $(KERNEL_TOOLCHAIN_PATH)"
 endif
 
 # Needed for CONFIG_COMPAT_VDSO, safe to set for all arm64 builds
 ifeq ($(KERNEL_ARCH),arm64)
   CC_ARM32_PATH=$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)
-  KERNEL_CROSS_COMPILE += CROSS_COMPILE_ARM32="$(CC_ARM32_PATH)" CROSS_COMPILE_COMPAT="$(CC_ARM32_PATH)"
+  KERNEL_CROSS_COMPILE += CROSS_COMPILE_ARM32=$(CC_ARM32_PATH)
+  KERNEL_CROSS_COMPILE += CROSS_COMPILE_COMPAT=$(CC_ARM32_PATH)
 endif
 
 # Clear this first to prevent accidental poisoning from env
@@ -161,26 +169,29 @@ endif
 prebuilt_build_tools_bin_path := $(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin
 KERNEL_MAKE_FLAGS += -j$(shell $(prebuilt_build_tools_bin_path)/nproc --all)
 
+# Host cflags and ldflags
 ifeq ($(HOST_OS),darwin)
   KERNEL_MAKE_FLAGS += HOSTCFLAGS="-I$(BUILD_TOP)/external/elfutils/libelf -I/usr/local/opt/openssl/include" HOSTLDFLAGS="-L/usr/local/opt/openssl/lib -fuse-ld=lld"
 else
   KERNEL_MAKE_FLAGS += CPATH="/usr/include:/usr/include/x86_64-linux-gnu" HOSTLDFLAGS="-L/usr/lib/x86_64-linux-gnu -L/usr/lib64 -fuse-ld=lld --rtlib=compiler-rt"
 endif
 
+# Add additional flags from BoardConfig
 ifneq ($(TARGET_KERNEL_ADDITIONAL_FLAGS),)
   KERNEL_MAKE_FLAGS += $(TARGET_KERNEL_ADDITIONAL_FLAGS)
 endif
 
+# Setup tools
 KERNEL_BUILD_TOOLS := $(BUILD_TOP)/prebuilts/kernel-build-tools/$(HOST_PREBUILT_TAG)/bin
 
 TOOLS_PATH_OVERRIDE := \
-    PATH=$(CLANG_PREBUILTS):$(KERNEL_BUILD_TOOLS):$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin:$$PATH \
-    LD_LIBRARY_PATH=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/lib:$$LD_LIBRARY_PATH \
-    PERL5LIB=$(BUILD_TOP)/prebuilts/build-tools/common/perl-base
+  PATH=$(CLANG_PREBUILTS):$(KERNEL_BUILD_TOOLS):$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin:$$PATH \
+  LD_LIBRARY_PATH=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/lib:$$LD_LIBRARY_PATH \
+  PERL5LIB=$(BUILD_TOP)/prebuilts/build-tools/common/perl-base
 
 # Set DTBO image locations so the build system knows to build them
 ifeq (true,$(filter true, $(TARGET_NEEDS_DTBOIMAGE) $(BOARD_KERNEL_SEPARATED_DTBO)))
-BOARD_PREBUILT_DTBOIMAGE ?= $(TARGET_OUT_INTERMEDIATES)/DTBO_OBJ/arch/$(KERNEL_ARCH)/boot/dtbo.img
+  BOARD_PREBUILT_DTBOIMAGE ?= $(TARGET_OUT_INTERMEDIATES)/DTBO_OBJ/arch/$(KERNEL_ARCH)/boot/dtbo.img
 endif
 
 # Set use the full path to the make command
@@ -205,7 +216,7 @@ TOOLS_PATH_OVERRIDE += BISON_PKGDATADIR=$(BUILD_TOP)/prebuilts/build-tools/commo
 OUT_DIR_PREFIX := $(shell echo $(OUT_DIR) | sed -e 's|/target/.*$$||g')
 KERNEL_BUILD_OUT_PREFIX :=
 ifeq ($(OUT_DIR_PREFIX),out)
-KERNEL_BUILD_OUT_PREFIX := $(BUILD_TOP)/
+  KERNEL_BUILD_OUT_PREFIX := $(BUILD_TOP)/
 endif
 
 include build/make/core/BoardConfigSoong.mk
