@@ -188,8 +188,12 @@ ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
   endif
 endif
 
+# build-tools path
+prebuilt_build_tools_path := $(BUILD_TOP)/prebuilts/build-tools
+prebuilt_build_tools_bin_path := $(prebuilt_build_tools_path)/$(HOST_PREBUILT_TAG)/bin
+prebuilt_build_tools_common_path := $(prebuilt_build_tools_path)/common
+
 # Add back threads, ninja cuts this to $(nproc)/2
-prebuilt_build_tools_bin_path := $(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin
 KERNEL_MAKE_FLAGS += -j$(shell $(prebuilt_build_tools_bin_path)/nproc --all)
 
 # Host cflags and ldflags
@@ -208,9 +212,9 @@ endif
 KERNEL_BUILD_TOOLS := $(BUILD_TOP)/prebuilts/kernel-build-tools/$(HOST_PREBUILT_TAG)/bin
 
 TOOLS_PATH_OVERRIDE := \
-  PATH=$(CLANG_PREBUILTS):$(KERNEL_BUILD_TOOLS)::$(GAS_PREBUILTS)$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin:$$PATH \
-  LD_LIBRARY_PATH=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/lib:$$LD_LIBRARY_PATH \
-  PERL5LIB=$(BUILD_TOP)/prebuilts/build-tools/common/perl-base
+  PATH=$(CLANG_PREBUILTS):$(KERNEL_BUILD_TOOLS):$(GAS_PREBUILTS):$(prebuilt_build_tools_bin_path):$$PATH \
+  LD_LIBRARY_PATH=$(prebuilt_build_tools_path)/$(HOST_PREBUILT_TAG)/lib:$$LD_LIBRARY_PATH \
+  PERL5LIB=$(prebuilt_build_tools_common_path)/perl-base
 
 # Set DTBO image locations so the build system knows to build them
 ifeq (true,$(filter true, $(TARGET_NEEDS_DTBOIMAGE) $(BOARD_KERNEL_SEPARATED_DTBO)))
@@ -218,7 +222,7 @@ ifeq (true,$(filter true, $(TARGET_NEEDS_DTBOIMAGE) $(BOARD_KERNEL_SEPARATED_DTB
 endif
 
 # Set use the full path to the make command
-KERNEL_MAKE_CMD := $(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin/make
+KERNEL_MAKE_CMD := $(prebuilt_build_tools_bin_path)/make
 
 # Set the full path to the clang command for host only if LLVM=1 isn't going to be used
 ifneq ($(TARGET_KERNEL_USE_LLVM_1),true)
@@ -229,10 +233,10 @@ ifneq ($(TARGET_KERNEL_USE_LLVM_1),true)
 endif
 
 # Since Linux 4.16, flex and bison are required
-KERNEL_MAKE_FLAGS += LEX=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin/flex
-KERNEL_MAKE_FLAGS += YACC=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin/bison
-KERNEL_MAKE_FLAGS += M4=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin/m4
-TOOLS_PATH_OVERRIDE += BISON_PKGDATADIR=$(BUILD_TOP)/prebuilts/build-tools/common/bison
+KERNEL_MAKE_FLAGS += LEX=$(prebuilt_build_tools_bin_path)/flex
+KERNEL_MAKE_FLAGS += YACC=$(prebuilt_build_tools_bin_path)/bison
+KERNEL_MAKE_FLAGS += M4=$(prebuilt_build_tools_bin_path)/m4
+TOOLS_PATH_OVERRIDE += BISON_PKGDATADIR=$(prebuilt_build_tools_common_path)/bison
 
 # Set the out dir for the kernel's O= arg
 # This needs to be an absolute path, so only set this if the standard out dir isn't used
