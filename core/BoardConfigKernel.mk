@@ -20,8 +20,11 @@
 #
 #   TARGET_KERNEL_SOURCE               = Kernel source dir, optional, defaults
 #                                          to kernel/$(TARGET_DEVICE_DIR)
+#
 #   TARGET_KERNEL_ADDITIONAL_FLAGS     = Additional make flags, optional
+#
 #   TARGET_KERNEL_ARCH                 = Kernel Arch
+#
 #   TARGET_KERNEL_CROSS_COMPILE_PREFIX = Compiler prefix (e.g. arm-eabi-)
 #                                          defaults to arm-linux-androidkernel- for arm
 #                                                      aarch64-linux-android- for arm64
@@ -41,15 +44,22 @@
 #   KERNEL_TOOLCHAIN_PREFIX            = Overrides TARGET_KERNEL_CROSS_COMPILE_PREFIX,
 #                                          Set this var in shell to override
 #                                          toolchain specified in BoardConfig.mk
+#
 #   KERNEL_TOOLCHAIN                   = Path to toolchain, if unset, assumes
 #                                          TARGET_KERNEL_CROSS_COMPILE_PREFIX
 #                                          is in PATH
+#
 #   USE_CCACHE                         = Enable ccache (global Android flag)
+#
 #   TARGET_KERNEL_USE_LLVM_1           = Pass LLVM=1 when building the kernel to use LLVM
 #                                          binutils only for kernels that support it, except
 #                                          for the integrated assembler.
+#
 #   TARGET_KERNEL_USE_LLVM_AS          = Same as above except it does use the integrated
 #                                          assembler and passes LLVM_IAS=1 as well.
+#
+#   TARGET_KERNEL_CLANG_USE_GAS        = Use Google's gas binutil prebuilts instead of GCC
+#                                          (prebuilts/gas). Also changes CROSS_COMPILE.
 
 BUILD_TOP := $(shell pwd)
 
@@ -78,6 +88,9 @@ ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
   TARGET_KERNEL_CLANG_PATH ?= $(BUILD_TOP)/prebuilts/clang/host/$(HOST_PREBUILT_TAG)/$(KERNEL_CLANG_VERSION)
   CLANG_PREBUILTS := $(TARGET_KERNEL_CLANG_PATH)/bin
 endif
+
+# GAS prebuilt path
+GAS_PREBUILTS := $(BUILD_TOP)/prebuilts/gas/$(HOST_PREBUILT_TAG)
 
 # GCC toolchain path
 GCC_PREBUILTS := $(BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)
@@ -122,14 +135,22 @@ endif
 
 # Cross-compile toolchain (GCC used as secondary if Clang is used)
 ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-  KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
+  ifeq ($(TARGET_KERNEL_CLANG_USE_GAS),true)
+    KERNEL_CROSS_COMPILE := CROSS_COMPILE=aarch64-linux-gnu-
+  else
+    KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(KERNEL_TOOLCHAIN_PATH)"
+  endif
 else
   KERNEL_CROSS_COMPILE := CROSS_COMPILE="$(CCACHE_BIN) $(KERNEL_TOOLCHAIN_PATH)"
 endif
 
 # Needed for CONFIG_COMPAT_VDSO, safe to set for all arm64 builds
 ifeq ($(KERNEL_ARCH),arm64)
-  CC_ARM32_PATH=$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)
+  ifeq ($(TARGET_KERNEL_CLANG_USE_GAS),true)
+    CC_ARM32_PATH=arm-linux-gnueabi-
+  else
+    CC_ARM32_PATH=$(KERNEL_TOOLCHAIN_arm)/$(KERNEL_TOOLCHAIN_PREFIX_arm)
+  endif
   KERNEL_CROSS_COMPILE += CROSS_COMPILE_ARM32=$(CC_ARM32_PATH)
   KERNEL_CROSS_COMPILE += CROSS_COMPILE_COMPAT=$(CC_ARM32_PATH)
 endif
@@ -162,7 +183,9 @@ else ifeq ($(KERNEL_ARCH),x86)
   KERNEL_CLANG_TRIPLE ?= CLANG_TRIPLE=x86_64-linux-gnu-
 endif
 ifneq ($(TARGET_KERNEL_CLANG_COMPILE),false)
-  KERNEL_MAKE_FLAGS += $(KERNEL_CLANG_TRIPLE)
+  ifneq ($(TARGET_KERNEL_CLANG_USE_GAS),true)
+    KERNEL_MAKE_FLAGS += $(KERNEL_CLANG_TRIPLE)
+  endif
 endif
 
 # Add back threads, ninja cuts this to $(nproc)/2
@@ -185,7 +208,7 @@ endif
 KERNEL_BUILD_TOOLS := $(BUILD_TOP)/prebuilts/kernel-build-tools/$(HOST_PREBUILT_TAG)/bin
 
 TOOLS_PATH_OVERRIDE := \
-  PATH=$(CLANG_PREBUILTS):$(KERNEL_BUILD_TOOLS):$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin:$$PATH \
+  PATH=$(CLANG_PREBUILTS):$(KERNEL_BUILD_TOOLS)::$(GAS_PREBUILTS)$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin:$$PATH \
   LD_LIBRARY_PATH=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/lib:$$LD_LIBRARY_PATH \
   PERL5LIB=$(BUILD_TOP)/prebuilts/build-tools/common/perl-base
 

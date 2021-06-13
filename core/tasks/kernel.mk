@@ -22,8 +22,11 @@
 # These config vars are usually set in BoardConfig.mk:
 #
 #   TARGET_KERNEL_CONFIG               = Kernel defconfig
+#
 #   TARGET_KERNEL_VARIANT_CONFIG       = Variant defconfig, optional
+#
 #   TARGET_KERNEL_SELINUX_CONFIG       = SELinux defconfig, optional
+#
 #   TARGET_KERNEL_ADDITIONAL_CONFIG    = Additional defconfig, optional
 #
 #   TARGET_KERNEL_CLANG_COMPILE        = Compile kernel with clang, defaults to true
@@ -42,6 +45,7 @@
 #
 #   NEED_KERNEL_MODULE_ROOT            = Optional, if true, install kernel
 #                                          modules in root instead of vendor
+#
 #   NEED_KERNEL_MODULE_VENDOR_OVERLAY  = Optional, if true, install kernel
 #                                          modules in vendor_overlay instead of vendor
 
