@@ -26,6 +26,17 @@ endif
 BUILDINFO_SH := build/make/tools/buildinfo.sh
 POST_PROCESS_PROPS := $(HOST_OUT_EXECUTABLES)/post_process_props$(HOST_EXECUTABLE_SUFFIX)
 
+# Set partition props for Benzo builds.
+ifneq ($(BENZO_BUILD),)
+TARGET_PRODUCT_PROP_VALUE := $(BENZO_BUILD)
+TARGET_BUILD_TYPE_PROP_VALUE := user
+BUILD_NUMBER_PROP_VALUE := $(BUILD_NUMBER_OVERRIDE)
+else
+TARGET_PRODUCT_PROP_VALUE:= $(TARGET_PRODUCT)
+TARGET_BUILD_TYPE_PROP_VALUE := $(TARGET_BUILD_VARIANT)
+BUILD_NUMBER_PROP_VALUE := $(BUILD_NUMBER_FROM_FILE)
+endif
+
 # Emits a set of sysprops common to all partitions to a file.
 # $(1): Partition name
 # $(2): Output file name
@@ -46,7 +57,7 @@ define generate-common-build-props
         echo "ro.product.$(1).device=$(TARGET_DEVICE)" >> $(2);\
         echo "ro.product.$(1).manufacturer=$(PRODUCT_MANUFACTURER)" >> $(2);\
         echo "ro.product.$(1).model=$(PRODUCT_MODEL)" >> $(2);\
-        echo "ro.product.$(1).name=$(TARGET_PRODUCT)" >> $(2);\
+        echo "ro.product.$(1).name=$(TARGET_PRODUCT_PROP_VALUE)" >> $(2);\
     )\
     $(if $(filter system vendor odm,$(1)),\
         echo "ro.$(1).product.cpu.abilist=$(TARGET_CPU_ABI_LIST) " >> $(2);\
@@ -58,8 +69,8 @@ define generate-common-build-props
     echo "ro.$(1).build.fingerprint=$(BUILD_FINGERPRINT_FROM_FILE)" >> $(2);\
     echo "ro.$(1).build.id=$(BUILD_ID)" >> $(2);\
     echo "ro.$(1).build.tags=$(BUILD_VERSION_TAGS)" >> $(2);\
-    echo "ro.$(1).build.type=$(TARGET_BUILD_VARIANT)" >> $(2);\
-    echo "ro.$(1).build.version.incremental=$(BUILD_NUMBER_FROM_FILE)" >> $(2);\
+    echo "ro.$(1).build.type=$(TARGET_BUILD_TYPE_PROP_VALUE)" >> $(2);\
+    echo "ro.$(1).build.version.incremental=$(BUILD_NUMBER_PROP_VALUE)" >> $(2);\
     echo "ro.$(1).build.version.release=$(PLATFORM_VERSION_LAST_STABLE)" >> $(2);\
     echo "ro.$(1).build.version.release_or_codename=$(PLATFORM_VERSION)" >> $(2);\
     echo "ro.$(1).build.version.sdk=$(PLATFORM_SDK_VERSION)" >> $(2);\
@@ -179,7 +190,7 @@ BUILD_FINGERPRINT :=
 # BUILD_THUMBPRINT is used to uniquely identify the system build; used by the
 # OTA server. This purposefully excludes any product-specific variables.
 ifeq (,$(strip $(BUILD_THUMBPRINT)))
-  BUILD_THUMBPRINT := $(PLATFORM_VERSION)/$(BUILD_ID)/$(BUILD_NUMBER_FROM_FILE):$(TARGET_BUILD_VARIANT)/$(BUILD_VERSION_TAGS)
+  BUILD_THUMBPRINT := $(PLATFORM_VERSION)/$(BUILD_ID)/$(BUILD_NUMBER_PROP_VALUE):$(TARGET_BUILD_VARIANT)/$(BUILD_VERSION_TAGS)
 endif
 
 BUILD_THUMBPRINT_FILE := $(PRODUCT_OUT)/build_thumbprint.txt
@@ -195,7 +206,7 @@ BUILD_THUMBPRINT :=
 #
 
 # BUILD_ID: detail info; has the same info as the build fingerprint
-BUILD_DESC := $(TARGET_PRODUCT)-$(TARGET_BUILD_VARIANT) $(PLATFORM_VERSION) $(BUILD_ID) $(BUILD_NUMBER_FROM_FILE) $(BUILD_VERSION_TAGS)
+BUILD_DESC := $(TARGET_PRODUCT)-$(TARGET_BUILD_VARIANT) $(PLATFORM_VERSION) $(BUILD_ID) $(BUILD_NUMBER_PROP_VALUE) $(BUILD_VERSION_TAGS)
 
 # BUILD_DISPLAY_ID is shown under Settings -> About Phone
 ifeq ($(TARGET_BUILD_VARIANT),user)
@@ -204,7 +215,7 @@ ifeq ($(TARGET_BUILD_VARIANT),user)
 
   # Dev. branches should have DISPLAY_BUILD_NUMBER set
   ifeq (true,$(DISPLAY_BUILD_NUMBER))
-    BUILD_DISPLAY_ID := $(BUILD_ID).$(BUILD_NUMBER_FROM_FILE) $(BUILD_KEYS)
+    BUILD_DISPLAY_ID := $(BUILD_ID).$(BUILD_NUMBER_PROP_VALUE) $(BUILD_KEYS)
   else
     BUILD_DISPLAY_ID := $(BUILD_ID) $(BUILD_KEYS)
   endif
@@ -260,7 +271,7 @@ $(gen_from_buildinfo_sh): $(INTERNAL_BUILD_ID_MAKEFILE) $(API_FINGERPRINT) | $(B
 	        DATE="$(DATE_FROM_FILE)" \
 	        BUILD_USERNAME="$(BUILD_USERNAME)" \
 	        BUILD_HOSTNAME="$(BUILD_HOSTNAME)" \
-	        BUILD_NUMBER="$(BUILD_NUMBER_FROM_FILE)" \
+	        BUILD_NUMBER="$(BUILD_NUMBER_PROP_VALUE)" \
 	        BOARD_BUILD_SYSTEM_ROOT_IMAGE="$(BOARD_BUILD_SYSTEM_ROOT_IMAGE)" \
 	        BOARD_USE_VBMETA_DIGTEST_IN_FINGERPRINT="$(BOARD_USE_VBMETA_DIGTEST_IN_FINGERPRINT)" \
 	        PLATFORM_VERSION="$(PLATFORM_VERSION)" \
