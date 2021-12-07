@@ -321,8 +321,6 @@ ifneq ($(BENZO_BUILD),)
 include vendor/benzo/config/BoardConfigVendor.mk
 endif
 
-include build/make/core/BoardConfigKernel.mk
-
 # The build system exposes several variables for where to find the kernel
 # headers:
 #   TARGET_DEVICE_KERNEL_HEADERS is automatically created for the current
