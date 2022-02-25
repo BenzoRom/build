@@ -30,12 +30,27 @@ $(call add_soong_config_var,ANDROID,TARGET_ENABLE_MEDIADRM_64)
 $(call add_soong_config_var,ANDROID,BOARD_USES_ODMIMAGE)
 $(call add_soong_config_var,ANDROID,PRODUCT_INSTALL_DEBUG_POLICY_TO_SYSTEM_EXT)
 
-ifeq (,$(findstring com.google.android.conscrypt,$(PRODUCT_PACKAGES)))
+# Default behavior for the tree wrt building modules or using prebuilts. This
+# can always be overridden by setting the environment variable
+# MODULE_BUILD_FROM_SOURCE.
+BRANCH_DEFAULT_MODULE_BUILD_FROM_SOURCE := true
+
+ifneq (,$(MODULE_BUILD_FROM_SOURCE))
+  # Keep an explicit setting.
+else ifeq (,$(filter sdk win_sdk sdk_addon,$(MAKECMDGOALS))$(findstring com.google.android.conscrypt,$(PRODUCT_PACKAGES)))
   # Prebuilt module SDKs require prebuilt modules to work, and currently
   # prebuilt modules are only provided for com.google.android.xxx. If we can't
   # find one of them in PRODUCT_PACKAGES then assume com.android.xxx are in use,
   # and disable prebuilt SDKs. In particular this applies to AOSP builds.
+  #
+  # However, sdk/win_sdk/sdk_addon builds might not include com.google.android.xxx
+  # packages, so for those we respect the default behavior.
   MODULE_BUILD_FROM_SOURCE := true
+else ifeq (,$(filter-out modules_% mainline_modules_%,$(TARGET_PRODUCT)))
+  # Always build from source in unbundled builds using the module targets.
+  MODULE_BUILD_FROM_SOURCE := true
+else
+  MODULE_BUILD_FROM_SOURCE := $(BRANCH_DEFAULT_MODULE_BUILD_FROM_SOURCE)
 endif
 
 # TODO(b/172480615): Remove when platform uses ART Module prebuilts by default.
@@ -43,7 +58,9 @@ ifeq (,$(filter art_module,$(SOONG_CONFIG_NAMESPACES)))
   $(call add_soong_config_namespace,art_module)
   SOONG_CONFIG_art_module += source_build
 endif
-ifneq (,$(findstring .android.art,$(TARGET_BUILD_APPS)))
+ifneq (,$(SOONG_CONFIG_art_module_source_build))
+  # Keep an explicit setting.
+else ifneq (,$(findstring .android.art,$(TARGET_BUILD_APPS)))
   # Build ART modules from source if they are listed in TARGET_BUILD_APPS.
   SOONG_CONFIG_art_module_source_build := true
 else ifeq (,$(filter-out modules_% mainline_modules_%,$(TARGET_PRODUCT)))
@@ -83,7 +100,7 @@ else
   # This sets the default for building ART APEXes from source rather than
   # prebuilts (in packages/modules/ArtPrebuilt and prebuilt/module_sdk/art) in
   # all other platform builds.
-  SOONG_CONFIG_art_module_source_build ?= false
+  SOONG_CONFIG_art_module_source_build ?= true
 endif
 
 # Apex build mode variables
